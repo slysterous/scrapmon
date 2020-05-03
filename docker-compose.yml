@@ -1,0 +1,10 @@
+version: "3.3"
+
+services:
+  print-scrape-ci:
+    image: print-scrape-ci
+    build:
+      context: ./
+      dockerfile: ./scripts/Dockerfile
+    container_name: print-scrape_ci
+    environment:
