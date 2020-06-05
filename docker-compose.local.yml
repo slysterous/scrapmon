@@ -1,0 +1,7 @@
+version: "3.3"
+
+services:
+  
+  print-scrape-db:
+    ports:
+      - "5432:5432"

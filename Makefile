@@ -19,7 +19,7 @@ ci:
 	docker-compose build
 	docker-compose up -d
 	docker-compose ps
-	docker-compose run print-scrape ./scripts/ci.sh
+	docker-compose run print-scrape-ci ./scripts/ci.sh
 	docker-compose down
 
 run:

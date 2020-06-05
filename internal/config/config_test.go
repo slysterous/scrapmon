@@ -4,17 +4,16 @@ import (
 	"os"
 	"testing"
 
-	"github.com/slysterous.com/print-scrape/internal/config"
+	"github.com/slysterous/print-scrape/internal/config"
 )
 
 func TestFromEnv(t *testing.T) {
-	setEnv(t, "PRINT_SCRAPE _DB_HOST", "host")
+	setEnv(t, "PRINT_SCRAPE_DB_HOST", "host")
 	setEnv(t, "PRINT_SCRAPE_DB_NAME", "db")
 	setEnv(t, "PRINT_SCRAPE_DB_PORT", "5000")
 	setEnv(t, "PRINT_SCRAPE_DB_USER", "dbuser")
 	setEnv(t, "PRINT_SCRAPE_DB_PASSWORD", "password")
 	setEnv(t, "MAX_DB_CONNECTIONS", "100")
-	setEnv(t, "HTTP_CLIENT_TIMEOUT_SECONDS", "25")
 
 	defer unsetEnv(t, "PRINT_SCRAPE_DB_HOST")
 	defer unsetEnv(t, "PRINT_SCRAPE_DB_NAME")
@@ -22,7 +21,6 @@ func TestFromEnv(t *testing.T) {
 	defer unsetEnv(t, "PRINT_SCRAPE_DB_USER")
 	defer unsetEnv(t, "PRINT_SCRAPE_DB_PASSWORD")
 	defer unsetEnv(t, "MAX_DB_CONNECTIONS")
-	defer unsetEnv(t, "HTTP_CLIENT_TIMEOUT_SECONDS")
 
 	cfg := config.FromEnv()
 
@@ -42,13 +40,9 @@ func TestFromEnv(t *testing.T) {
 		t.Errorf("env var PRINT_SCRAPE_DB_PASSWORD=%q,want %q", got, want)
 	}
 
-	if got, want := cfg.HTTPClientTimeout, 25; got != want {
-		t.Errorf("env var HTTP_CLIENT_TIMEOUT_SECONDS=%d, want %d", got, want)
-	}
 	if got, want := cfg.MaxDBConnections, 100; got != want {
 		t.Errorf("env var MAX_DB_CONNECTIONS=%d,want %d", got, want)
 	}
-
 }
 
 func setEnv(t *testing.T, key, value string) {
