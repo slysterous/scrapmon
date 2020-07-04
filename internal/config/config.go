@@ -17,6 +17,8 @@ func FromEnv() printscrape.Config {
 		DatabasePassword: getString("PRINT_SCRAPE_DB_PASSWORD", "password"),
 		MaxDBConnections: getInt("MAX_DB_CONNECTIONS", 100),
 		Env:              getString("PRINT_SCRAPE_ENV", "dev"),
+		TorHost:          getString("TOR_HOST", "tor"),
+		TorPort:          getString("TOR_PORT", "9050"),
 	}
 }
 

@@ -17,6 +17,10 @@ services:
       PRINT_SCRAPE_DB_NAME: "print-scrape"
     depends_on:
       - print-scrape-db
+  tor:
+    image: dperson/torproxy
+    environment:
+      TORUSER: root
   print-scrape-db:
     image: postgres:12.0
     container_name: print-scrape-db

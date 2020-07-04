@@ -1,15 +1,14 @@
 package main
 
 import (
-	"fmt"
-	"log"
-	"net/http"
-	"os"
-
-	"github.com/PuerkitoBio/goquery"
-
-	//cfg "github.com/slysterous/print-scrape/internal/config"
+	"container/ring"
+	cfg "github.com/slysterous/print-scrape/internal/config"
 	printscrape "github.com/slysterous/print-scrape/internal/domain"
+	"github.com/slysterous/print-scrape/internal/file"
+	phttp "github.com/slysterous/print-scrape/internal/http"
+	"github.com/slysterous/print-scrape/internal/postgres"
+	"log"
+	"os"
 	//"github.com/slysterous/print-scrape/internal/postgres"
 	"github.com/spf13/cobra"
 )
@@ -18,6 +17,91 @@ var rootCmd = &cobra.Command{
 	Use:   "print-scrape",
 	Short: "Prntscr Scrapper",
 	Long:  "A highly concurrent PrntScr Scrapper.",
+}
+
+//a linked list of linked lists
+var test [6]ring.Ring
+
+//for i, ring := range test {
+//	test[i] = ring.New(36)
+//	for j,cell :=range test[i]{
+//
+//	}
+//}
+
+func newRing()*ring.Ring{
+	r:=ring.New(36)
+	values:=[]rune{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'}
+	for _,rn :=range values{
+		r.Value=rn
+		r.Next()
+	}
+	r.Next()
+	return r
+}
+
+// => 0 1 2 3 4 5 6 7 8 9 a b c d e f g h i j k l m n o p q r s t u v w x y z  arithmetic system
+
+// var value = "0a9esd"
+
+// value.increment() => 0a8ese
+
+//==================================
+
+// var value = "0a9esz"
+
+// value.increment() => 0a8et0
+//=====================================
+
+
+//start scrapping
+// 000000
+// .
+// .
+// 00000z
+// 000010
+
+
+
+
+
+//
+// node represents a single item in the list, where each item has a value and points to another item
+type node struct {
+	value interface{}
+	next  *node
+}
+
+// List has all the items of the list beginning at first and ending at last
+type List struct {
+	first *node
+	last  *node
+	size  int
+}
+
+// New instantiates a new list and adds values to the list if any
+func New(values ...interface{}) *List {
+	list := &List{}
+	if len(values) > 0 {
+		list.Append(values...)
+	}
+
+	return list
+}
+
+// Append appends values to the list
+func (list *List) Append(values ...interface{}) {
+	for _, value := range values {
+		newNode := &node{value: value}
+		if list.size == 0 {
+			list.first = newNode
+			list.last = newNode
+		} else {
+			list.last.next = newNode
+			list.last = newNode
+		}
+		list.size++
+	}
 }
 
 // var purgeCmd = &cobra.Command{
@@ -129,42 +213,38 @@ func main() {
 // }
 
 func testFn(cmd *cobra.Command, args []string) {
-	//get code
-	_, err := cmd.Flags().GetString("code")
+	client := phttp.NewClient("tor", "9051")
 
+	//todo design the way to find codes to use
+	code := "gae309"
+	pathToSave := "gae309.png"
+
+	// client fetch image url for specific code -- return url string
+	url, err := client.GetImageUrlByCode(code)
 	if err != nil {
-		log.Fatalf("error loading screenshot code, err: %v,err")
+		log.Fatalf("BUMMER!")
 	}
 
-	//url:=fmt.Sprintf("https://prnt.sc/%s",code)
-	url := "https://prnt.sc"
-	log.Printf("scraping page: %s\n", url)
+	//download the image by image url --return image (stream)
+	imageReader, err := client.DownloadImage(url)
 
-	res, err := http.Get(url)
+	//save image to file system
+	fileManager := file.NewManager()
+	err = fileManager.SaveImage(imageReader, pathToSave)
 	if err != nil {
-		log.Fatal(err)
-	}
-	defer res.Body.Close()
-	if res.StatusCode != 200 {
-		log.Fatalf("status code error: %d %s", res.StatusCode, res.Status)
+		log.Fatalf("BUMMER!2")
 	}
 
-	doc, err := goquery.NewDocumentFromReader(res.Body)
-	if err != nil {
-		log.Fatal(err)
+	//save state for specific code to database.
+	dbClient, err := postgres.NewClient(getDataSource(cfg.FromEnv()), cfg.FromEnv().MaxDBConnections)
+	screenshot:=printscrape.Screenshot{
+		RefCode:code,
+		FileURI:pathToSave,
 	}
-
-	fmt.Printf(doc.Text())
-
-	// Find the review items
-	doc.Find("img").Each(func(i int, s *goquery.Selection) {
-		// For each item found, get the band and title
-		link := s.Find("src").Text()
-		fmt.Printf("THIS: %s", link)
-	})
-
-	fmt.Println("SUCCESS")
-
+	_,err=dbClient.CreateScrap(screenshot)
+	if err!=nil{
+		log.Fatalf("ANTE GAMHSOU")
+	}
 }
 
 func getDataSource(cfg printscrape.Config) string {

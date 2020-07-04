@@ -10,6 +10,8 @@ type Config struct {
 	DatabaseName      string
 	HTTPClientTimeout int
 	MaxDBConnections  int
+	TorHost           string
+	TorPort           string
 }
 
 // Storage defines the different types of storage.
@@ -29,7 +31,7 @@ type Purger interface {
 	Purge() error
 }
 
-// DatabaseManager defines the storage management behaviour. 
+// DatabaseManager defines the storage management behaviour.
 type DatabaseManager interface {
 	GetScreenshotByCode()
 	SaveScreenshotRef()
@@ -49,13 +51,13 @@ type ScreenshotScrapper interface {
 }
 
 // Purge will clear all data saved in files and database
-func  (s *Storage) Purge() error {
-	err:=s.Dm.Purge()
-	if err !=nil {
+func (s *Storage) Purge() error {
+	err := s.Dm.Purge()
+	if err != nil {
 		return err
 	}
-	err =s.Fm.Purge()
-	if err !=nil {
+	err = s.Fm.Purge()
+	if err != nil {
 		return err
 	}
 	return nil
