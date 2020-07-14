@@ -6,7 +6,6 @@ require (
 	github.com/DATA-DOG/go-sqlmock v1.4.1
 	github.com/PuerkitoBio/goquery v1.5.1
 	github.com/antchfx/htmlquery v1.2.3
-	github.com/antchfx/xpath v1.1.6 // indirect
 	github.com/antchfx/xquery v0.0.0-20180515051857-ad5b8c7a47b0 // indirect
 	github.com/golang-migrate/migrate v3.5.4+incompatible
 	github.com/golang-migrate/migrate/v4 v4.10.0 // indirect

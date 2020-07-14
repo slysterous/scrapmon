@@ -33,7 +33,7 @@ type Purger interface {
 
 // DatabaseManager defines the storage management behaviour.
 type DatabaseManager interface {
-	GetScreenshotByCode()
+	GetScreenshotRefByCode()
 	SaveScreenshotRef()
 	Purger
 }

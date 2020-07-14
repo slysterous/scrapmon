@@ -1,14 +1,14 @@
 package main
 
 import (
-	"container/ring"
-	cfg "github.com/slysterous/print-scrape/internal/config"
-	printscrape "github.com/slysterous/print-scrape/internal/domain"
-	"github.com/slysterous/print-scrape/internal/file"
-	phttp "github.com/slysterous/print-scrape/internal/http"
-	"github.com/slysterous/print-scrape/internal/postgres"
+	//"time"
+	"fmt"
 	"log"
 	"os"
+
+	printscrape "github.com/slysterous/print-scrape/internal/domain"
+	customNumber "github.com/slysterous/print-scrape/pkg/customnumber"
+
 	//"github.com/slysterous/print-scrape/internal/postgres"
 	"github.com/spf13/cobra"
 )
@@ -17,27 +17,6 @@ var rootCmd = &cobra.Command{
 	Use:   "print-scrape",
 	Short: "Prntscr Scrapper",
 	Long:  "A highly concurrent PrntScr Scrapper.",
-}
-
-//a linked list of linked lists
-var test [6]ring.Ring
-
-//for i, ring := range test {
-//	test[i] = ring.New(36)
-//	for j,cell :=range test[i]{
-//
-//	}
-//}
-
-func newRing()*ring.Ring{
-	r:=ring.New(36)
-	values:=[]rune{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'}
-	for _,rn :=range values{
-		r.Value=rn
-		r.Next()
-	}
-	r.Next()
-	return r
 }
 
 // => 0 1 2 3 4 5 6 7 8 9 a b c d e f g h i j k l m n o p q r s t u v w x y z  arithmetic system
@@ -53,7 +32,6 @@ func newRing()*ring.Ring{
 // value.increment() => 0a8et0
 //=====================================
 
-
 //start scrapping
 // 000000
 // .
@@ -65,44 +43,10 @@ func newRing()*ring.Ring{
 
 
 
-//
-// node represents a single item in the list, where each item has a value and points to another item
-type node struct {
-	value interface{}
-	next  *node
-}
 
-// List has all the items of the list beginning at first and ending at last
-type List struct {
-	first *node
-	last  *node
-	size  int
-}
 
-// New instantiates a new list and adds values to the list if any
-func New(values ...interface{}) *List {
-	list := &List{}
-	if len(values) > 0 {
-		list.Append(values...)
-	}
 
-	return list
-}
 
-// Append appends values to the list
-func (list *List) Append(values ...interface{}) {
-	for _, value := range values {
-		newNode := &node{value: value}
-		if list.size == 0 {
-			list.first = newNode
-			list.last = newNode
-		} else {
-			list.last.next = newNode
-			list.last = newNode
-		}
-		list.size++
-	}
-}
 
 // var purgeCmd = &cobra.Command{
 // 	Use:   "purge",
@@ -213,38 +157,52 @@ func main() {
 // }
 
 func testFn(cmd *cobra.Command, args []string) {
-	client := phttp.NewClient("tor", "9051")
 
-	//todo design the way to find codes to use
-	code := "gae309"
-	pathToSave := "gae309.png"
+	//start := time.Now()
 
-	// client fetch image url for specific code -- return url string
-	url, err := client.GetImageUrlByCode(code)
-	if err != nil {
-		log.Fatalf("BUMMER!")
+	values := []rune{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'}
+
+	number := customNumber.NewNumber(values,"150000")
+	fmt.Printf("initial number: %s \n", number.String())
+	
+	for number.String() != "z00000"{
+		number.Increment()
+		fmt.Printf("initial number: %s \n", number.String())
 	}
+	//fmt.Println(time.Since(start))
 
-	//download the image by image url --return image (stream)
-	imageReader, err := client.DownloadImage(url)
+	// client := phttp.NewClient("tor", "9051")
 
-	//save image to file system
-	fileManager := file.NewManager()
-	err = fileManager.SaveImage(imageReader, pathToSave)
-	if err != nil {
-		log.Fatalf("BUMMER!2")
-	}
+	// //todo design the way to find codes to use
+	// code := "gae309"
+	// pathToSave := "gae309.png"
 
-	//save state for specific code to database.
-	dbClient, err := postgres.NewClient(getDataSource(cfg.FromEnv()), cfg.FromEnv().MaxDBConnections)
-	screenshot:=printscrape.Screenshot{
-		RefCode:code,
-		FileURI:pathToSave,
-	}
-	_,err=dbClient.CreateScrap(screenshot)
-	if err!=nil{
-		log.Fatalf("ANTE GAMHSOU")
-	}
+	// // client fetch image url for specific code -- return url string
+	// url, err := client.GetImageUrlByCode(code)
+	// if err != nil {
+	// 	log.Fatalf("BUMMER!")
+	// }
+
+	// //download the image by image url --return image (stream)
+	// imageReader, err := client.DownloadImage(url)
+
+	// //save image to file system
+	// fileManager := file.NewManager()
+	// err = fileManager.SaveImage(imageReader, pathToSave)
+	// if err != nil {
+	// 	log.Fatalf("BUMMER!2")
+	// }
+
+	// //save state for specific code to database.
+	// dbClient, err := postgres.NewClient(getDataSource(cfg.FromEnv()), cfg.FromEnv().MaxDBConnections)
+	// screenshot:=printscrape.Screenshot{
+	// 	RefCode:code,
+	// 	FileURI:pathToSave,
+	// }
+	// _,err=dbClient.CreateScrap(screenshot)
+	// if err!=nil{
+	// 	log.Fatalf("ANTE GAMHSOU")
+	// }
 }
 
 func getDataSource(cfg printscrape.Config) string {
