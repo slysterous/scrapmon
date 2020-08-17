@@ -11,6 +11,7 @@ import (
 	"net/url"
 	"os"
 	"time"
+	printscrape"github.com/slysterous/print-scrape/internal/domain"
 )
 
 type Client struct {
@@ -18,8 +19,8 @@ type Client struct {
 }
 
 func NewClient(torHost, torPort string) *Client {
-	//torProxyString := fmt.Sprintf("socks5://%s:%s", torHost, torPort)
-	torProxyString := fmt.Sprintf("socks5://%s:%s", "127.0.0.1", "9050")
+	torProxyString := fmt.Sprintf("socks5://%s:%s", torHost, torPort)
+	//torProxyString := fmt.Sprintf("socks5://%s:%s", "127.0.0.1", "9050")
 	torProxyURL, err := url.Parse(torProxyString)
 	if err != nil {
 		log.Fatal("http: error parsing Tor proxy URL:", torProxyString, ". ", err)
@@ -46,14 +47,16 @@ func NewClient(torHost, torPort string) *Client {
 	}
 }
 
-// GetImageUrlByCode fetches a screenshot's actual img url from a code.
+// GetImageUrlByCode fetches a ScreenShot's actual img url from a code.
 func (c Client) GetImageUrlByCode(code string) (string, error) {
 	return "", nil
 }
 
-func (c Client) DownloadImage(url string) (io.Reader, error) {
-	return
-}
+//func (c Client) DownloadImage(url string) (io.Reader, error) {
+//	fetchScreenShotSourceLinkByCode
+//
+//	return
+//}
 
 //func (c Client) Get(requestURL string) (io.ReadCloser, error) {
 //	randomUA := RandomUserAgent()
@@ -76,26 +79,55 @@ func (c Client) DownloadImage(url string) (io.Reader, error) {
 //	return resp.Body, nil
 //}
 
-// FetchImage is a method.
-func (c *Client) FetchImage() (*string, error) {
-
-	bow := surf.NewBrowser()
-	err := bow.Open("https://prnt.sc/ca2343")
-	if err != nil {
-		panic(err)
+func (c *Client) fetchScreenShotSourceLinkByCode(code string)(*string,error){
+	bow:=surf.NewBrowser()
+	err:=bow.Open("https://prnt.sc/"+code)
+	if err !=nil {
+		return nil, fmt.Errorf("http: could not fetch Screenshot image source link: %v",err)
 	}
 
-	// Outputs: "The Go Programming Language"
-	fmt.Println(bow.Title())
-	bow.Dom().Find("#screenshot-image").Each(func(i int, selection *goquery.Selection) {
+	var screenShotUrl string
+
+	bow.Dom().Find("#ScreenShot-image").Each(func(i int, selection *goquery.Selection) {
 		imgURL := selection.AttrOr(`src`, ``)
-		err := DownloadAndSaveFile(imgURL, `ca2343.png`)
-		if err != nil {
-			fmt.Printf("ERROR: %v", err)
+		if imgURL!=""{
+			screenShotUrl=imgURL
+			return
 		}
-		fmt.Println(1, selection.AttrOr(`src`, ``))
-		fmt.Printf("BINGO\n")
 	})
+
+	//url was not found
+	if screenShotUrl==""{
+		return nil,nil
+	}
+
+	return &screenShotUrl,nil
+}
+
+// DownloadImage attemps to download an image that belongs to a 6digit code in prnt.sc.
+func (c *Client) DownloadScreenShot (code string,filepath string, manager printscrape.FileManager) error {
+
+	imgURL,err:=c.fetchScreenShotSourceLinkByCode(code)
+	if err !=nil {
+		return fmt.Errorf("http: could not get image screenshot source, err: %v",err)
+	}
+	if imgURL ==nil {
+		return nil
+	}
+
+	//Get the response bytes from the url
+	response, err := http.Get(*imgURL)
+	if err != nil {
+		return fmt.Errorf("http: could not get image screenshot, err: %v",err)
+	}
+	defer response.Body.Close()
+
+	err = SaveFile(filepath,&response.Body)
+	if err !=nil {
+		return err
+	}
+
+
 	//randomUA := GenerateRandomUserAgent()
 	//
 	//requestURL:="https://prnt.sc/aaaaab"
@@ -142,10 +174,26 @@ func (c *Client) FetchImage() (*string, error) {
 	////doc, err := goquery.NewDocumentFromReader(bodyReader)
 	//
 	//
-	return nil, nil
+	return nil
 }
 
-func DownloadAndSaveFile(URL, fileName string) error {
+func SaveFile(filePath string, body *io.ReadCloser) error {
+	//Create a empty file
+	file, err := os.Create(filePath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	//Write the bytes to the file
+	_, err = io.Copy(file, *body)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func DownloadAndSaveFile(URL, filePath string) error {
 	//Get the response bytes from the url
 	response, err := http.Get(URL)
 	if err != nil {
@@ -153,13 +201,13 @@ func DownloadAndSaveFile(URL, fileName string) error {
 	defer response.Body.Close()
 
 	//Create a empty file
-	file, err := os.Create(fileName)
+	file, err := os.Create(filePath)
 	if err != nil {
 		return err
 	}
 	defer file.Close()
 
-	//Write the bytes to the fiel
+	//Write the bytes to the file
 	_, err = io.Copy(file, response.Body)
 	if err != nil {
 		return err

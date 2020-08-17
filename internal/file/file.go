@@ -16,7 +16,7 @@ func NewManager() *Manager {
 }
 
 // SaveImage saves image bytes to a specified file.
-func (m Manager) SaveImage(src io.Reader, path string) (err error) {
+func (m Manager) SaveImageFile(src io.Reader, path string) (err error) {
 	//Create a empty file
 	file, err := os.Create(path)
 	if err != nil {
@@ -35,3 +35,5 @@ func (m Manager) SaveImage(src io.Reader, path string) (err error) {
 	}
 	return nil
 }
+
+func ()

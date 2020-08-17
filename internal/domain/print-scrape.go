@@ -1,17 +1,34 @@
 package domain
 
+import "time"
+
+var CustomNumberDigitValues = []rune{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'}
+
+// ScreenShotStatus describes the status of a ScreenShot.
+type ScreenShotStatus string
+
+// Possible ScreenShot Status  values.
+const (
+	StatusPending  ScreenShotStatus = "pending"
+	StatusOngoing  ScreenShotStatus = "ongoing"
+	StatusSuccess  ScreenShotStatus = "success"
+	StatusFailure  ScreenShotStatus = "failure"
+	StatusNotFound ScreenShotStatus = "notfound"
+)
+
 // Config represents the applications configuration parameters
 type Config struct {
-	Env               string
-	DatabaseUser      string
-	DatabasePassword  string
-	DatabaseHost      string
-	DatabasePort      string
-	DatabaseName      string
-	HTTPClientTimeout int
-	MaxDBConnections  int
-	TorHost           string
-	TorPort           string
+	Env                     string
+	DatabaseUser            string
+	DatabasePassword        string
+	DatabaseHost            string
+	DatabasePort            string
+	DatabaseName            string
+	HTTPClientTimeout       int
+	MaxDBConnections        int
+	TorHost                 string
+	TorPort                 string
+	ScreenShotStorageFolder string
 }
 
 // Storage defines the different types of storage.
@@ -20,10 +37,13 @@ type Storage struct {
 	Dm DatabaseManager
 }
 
-// Screenshot defines a scrapped screenshot.
-type Screenshot struct {
-	RefCode string
-	FileURI string
+// ScreenShot defines a scrapped ScreenShot.
+type ScreenShot struct {
+	ID            int64
+	RefCode       string
+	CodeCreatedAt time.Time
+	FileURI       string
+	Status        ScreenShotStatus
 }
 
 // Purger defines the purging behaviour.
@@ -33,21 +53,23 @@ type Purger interface {
 
 // DatabaseManager defines the storage management behaviour.
 type DatabaseManager interface {
-	GetScreenshotRefByCode()
-	SaveScreenshotRef()
+	CreateScreenShot(ss ScreenShot) (int, error)
+	UpdateScreenShotStatusByCode(code string, status ScreenShotStatus)
+	UpdateScreenShotByCode(ss ScreenShot) error
+	GetLatestCreatedScreenShotCode() (*string,error)
+	GetScrapByCode(code string) (ScreenShot,error)
 	Purger
 }
 
 // FileManager defins the file management behaviour.
 type FileManager interface {
-	SaveScreenshot()
-	GetScreenshot()
+	SaveImageFile()
 	Purger
 }
 
-// ScreenshotScrapper defines the scrapping bevahiour.
-type ScreenshotScrapper interface {
-	ScrapeScreenshotByCode()
+// ScreenShotScrapper defines the scrapping behaviour.
+type ScreenShotScrapper interface {
+	ScrapeScreenShotByCode()
 }
 
 // Purge will clear all data saved in files and database
@@ -62,9 +84,3 @@ func (s *Storage) Purge() error {
 	}
 	return nil
 }
-
-// PRNT.SCR SITE to scrap
-
-// DB to save ref codes and file urls
-
-// Filesystem to save files

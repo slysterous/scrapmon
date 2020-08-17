@@ -6,7 +6,41 @@ import (
 	printscrape "github.com/slysterous/print-scrape/internal/domain"
 	"github.com/slysterous/print-scrape/internal/postgres"
 	"testing"
+	"time"
 )
+
+func TestGetLatestCreatedScrapCodeSuccess(t *testing.T) {
+	db, mock, closeDB := sqlMockNew(t)
+
+	defer closeDB(db)
+
+	client := postgres.Client{DB: db}
+
+	want := "150000"
+
+	const query = "SELECT refCode from scraps ORDER BY codeCreatedAt DESC limit 1"
+
+	columns := []string{"RefCode"}
+
+	mock.ExpectQuery(query).WillReturnRows(mock.NewRows(columns).AddRow(
+		want,
+	))
+
+	got, err := client.GetLatestCreatedScrapCode()
+	if err != nil {
+		t.Fatalf("expected exec not to return error %v", err)
+	}
+
+	err = mock.ExpectationsWereMet()
+	if err != nil {
+		t.Fatalf("there were unfulfilled expectations: %v", err)
+	}
+
+	if want != *got {
+		t.Fatalf("expected: %s, got: %s", want, *got)
+	}
+
+}
 
 func TestGetScrapSuccess(t *testing.T) {
 	db, mock, closeDB := sqlMockNew(t)
@@ -15,12 +49,12 @@ func TestGetScrapSuccess(t *testing.T) {
 
 	client := postgres.Client{DB: db}
 
-	want := printscrape.Screenshot{
+	want := printscrape.ScreenShot{
 		FileURI: "testfile",
 		RefCode: "testcode",
 	}
 
-	const query = "SELECT fileURI FROM screenshots WHERE refCode\\=.*"
+	const query = "SELECT fileURI FROM ScreenShots WHERE refCode\\=.*"
 
 	columns := []string{"FileURI"}
 
@@ -54,15 +88,16 @@ func TestCreateScrapSuccess(t *testing.T) {
 
 	client := postgres.Client{DB: db}
 
-	want := printscrape.Screenshot{
-		FileURI: "testfile",
-		RefCode: "testcode",
+	want := printscrape.ScreenShot{
+		FileURI:       "testfile",
+		RefCode:       "testcode",
+		CodeCreatedAt: time.Now(),
 	}
 
 	const query = "INSERT INTO scraps \\(.*\\) VALUES .* RETURNING id"
-	mock.ExpectQuery(query).WithArgs(want.RefCode, want.FileURI).WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(1))
+	mock.ExpectQuery(query).WithArgs(want.RefCode, want.CodeCreatedAt, want.FileURI).WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(1))
 
-	got, err := client.CreateScrap(want)
+	got, err := client.CreateScreenShot(want)
 	if err != nil {
 		t.Fatalf("could not create scrap: %v", err)
 	}

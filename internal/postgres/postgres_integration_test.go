@@ -5,6 +5,7 @@ import (
 	"github.com/slysterous/print-scrape/internal/postgres"
 	"github.com/slysterous/print-scrape/internal/test"
 	"testing"
+	"time"
 )
 
 func TestNewClientError(t *testing.T) {
@@ -23,12 +24,13 @@ func TestClientCreateScrap(t *testing.T) {
 		DB: db,
 	}
 
-	wantedScrap := printscrape.Screenshot{
-		RefCode: "refcode",
-		FileURI: "fileuri",
+	wantedScrap := printscrape.ScreenShot{
+		RefCode:       "refcode",
+		CodeCreatedAt: time.Now(),
+		FileURI:       "fileuri",
 	}
 
-	id, err := client.CreateScrap(wantedScrap)
+	id, err := client.CreateScreenShot(wantedScrap)
 	if err != nil {
 		t.Fatalf("could not create scrap err: %v", err)
 	}

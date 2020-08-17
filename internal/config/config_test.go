@@ -14,6 +14,7 @@ func TestFromEnv(t *testing.T) {
 	setEnv(t, "PRINT_SCRAPE_DB_USER", "dbuser")
 	setEnv(t, "PRINT_SCRAPE_DB_PASSWORD", "password")
 	setEnv(t, "MAX_DB_CONNECTIONS", "100")
+	setEnv(t, "PRINT_SCRAPE_ScreenShot_STORAGE_FOLDER", "./")
 
 	defer unsetEnv(t, "PRINT_SCRAPE_DB_HOST")
 	defer unsetEnv(t, "PRINT_SCRAPE_DB_NAME")
@@ -21,6 +22,7 @@ func TestFromEnv(t *testing.T) {
 	defer unsetEnv(t, "PRINT_SCRAPE_DB_USER")
 	defer unsetEnv(t, "PRINT_SCRAPE_DB_PASSWORD")
 	defer unsetEnv(t, "MAX_DB_CONNECTIONS")
+	defer unsetEnv(t, "PRINT_SCRAPE_ScreenShot_STORAGE_FOLDER")
 
 	cfg := config.FromEnv()
 
@@ -42,6 +44,10 @@ func TestFromEnv(t *testing.T) {
 
 	if got, want := cfg.MaxDBConnections, 100; got != want {
 		t.Errorf("env var MAX_DB_CONNECTIONS=%d,want %d", got, want)
+	}
+
+	if got, want := cfg.ScreenShotStorageFolder, "./"; got != want {
+		t.Errorf("env var PRINT_SCRAPE_ScreenShot_STORAGE_FOLDER=%s,want %s", got, want)
 	}
 }
 
