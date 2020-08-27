@@ -3,7 +3,7 @@ package main
 import (
 	//"time"
 	"fmt"
-	"github.com/slysterous/print-scrape/internal/file"
+	file "github.com/slysterous/print-scrape/internal/file"
 	"github.com/slysterous/print-scrape/internal/postgres"
 	"log"
 	"os"
@@ -43,24 +43,24 @@ var rootCmd = &cobra.Command{
 // 	Run:   fetchFn,
 // }
 
-var scrapeCmd = &cobra.Command{
-	Use:   "scrape",
-	Short: "Scrapes everything based on an algorithm",
-	Run:   scrapeFn,
-}
+// var scrapeCmd = &cobra.Command{
+// 	Use:   "scrape",
+// 	Short: "Scrapes everything based on an algorithm",
+// 	Run:   scrapeFn,
+// }
 
-//var testCmd = &cobra.Command{
-//	Use:   "test",
-//	Short: "Nevermind this is a test",
-//	Run:   testFn,
-//}
+var testCmd = &cobra.Command{
+	Use:   "test",
+	Short: "Nevermind this is a test",
+	Run:   testFn,
+}
 
 func init() {
 	// rootCmd.AddCommand(purgeCmd)
 	// rootCmd.AddCommand(findCmd)
 	// rootCmd.AddCommand(fetchCmd)
-	rootCmd.AddCommand(scrapeCmd)
-	//rootCmd.AddCommand(testCmd)
+	//rootCmd.AddCommand(scrapeCmd)
+	rootCmd.AddCommand(testCmd)
 
 	//testCmd.Flags().StringP("code", "c", "", "prntsc code")
 	//findCmd.Flags().StringP("code", "c", "", "6 digit alphanumeric code to search against the database")
@@ -120,130 +120,200 @@ func main() {
 
 // }
 
-func scrapeFn(_ *cobra.Command, _ []string) {
-	// init db client
+// func scrapeFn(_ *cobra.Command, _ []string) {
+// 	// init db client
+// 	db, err := postgres.NewClient(getDataSource(cfg.FromEnv()), cfg.FromEnv().MaxDBConnections)
+// 	if err != nil {
+// 		log.Fatalf("could not connect to DB, err: %v", err)
+// 	}
+
+// 	// find the resume point, if any.
+// 	lastCode, err := db.GetLatestCreatedScreenShotCode()
+// 	if err != nil {
+// 		log.Fatalf("could not get latest prnt.sc code, err: %v", err)
+// 	}
+
+// 	// create a screenShot item
+// 	screenShot := printscrape.ScreenShot{
+// 		CodeCreatedAt: time.Now(),
+// 		RefCode:       createResumeCodeNumber(lastCode).String(),
+// 		FileURI:       "",
+// 	}
+
+// 	// start saving item to db with status pending
+// 	_, err = db.CreateScreenShot(screenShot)
+// 	if err != nil {
+// 		log.Fatalf("could not save scrap, err: %v", err)
+// 	}
+
+// 	torClient := phttp.NewClient("tor", "9051")
+
+// 	url, err := torClient.ScrapeImageByCode(screenShot.RefCode)
+
+// 	if err!=nil {
+// 		log.Fatalf("could not get screenshot url, err: %v",err)
+// 	}
+
+// 	if url==nil{
+// 		log.Fatalf("scrape did not work.")
+// 	}
+	
+// 	// client fetch image url for specific code -- return url string
+// 	//url, err := torClient.FetchScreenShotSourceLinkByCode(screenShot.RefCode)
+// 	//if err != nil {
+// 	//	log.Fatalf("could not fetch ScreenShot image link, err: %v",err)
+// 	//}
+// 	//
+// 	//if url == nil {
+// 	//	log.Fatalf("image link was not found")
+// 	//}
+
+// 	// update screenShot status to pending since the process has started.
+// 	err = db.UpdateScreenShotStatusByCode(screenShot.RefCode, printscrape.StatusOngoing)
+// 	if err != nil {
+// 		log.Fatalf("could not update scrap status, err: %v", err)
+// 	}
+
+// 	// create the url where the actual image will be saved.
+// 	fileUrl := fmt.Sprintf("%s/%s.jpg", cfg.FromEnv().ScreenShotStorageFolder, screenShot.RefCode)
+
+// 	//save file to filesystem
+// 	fileManager := file.NewManager()
+
+// 	//download and save the image
+// 	err = torClient.DownloadScreenShot(screenShot.RefCode, fileUrl, fileManager)
+// 	if err != nil {
+// 		log.Fatalf("could not ")
+// 	}
+
+// 	screenShot.FileURI = fileUrl
+// 	screenShot.Status = printscrape.StatusOngoing
+
+// 	err = db.UpdateScreenShotByCode(screenShot)
+// 	if err != nil {
+// 		log.Fatalf("could not update scrap status and file url, err: %v", err)
+// 	}
+
+// 	//save file to filesystem
+// 	fileManager := file.NewManager()
+
+// 	err = fileManager.SaveImage(imageReader, fileUrl)
+// 	if err != nil {
+// 		log.Fatalf("could not save image to file system, err: %v", err)
+// 	}
+
+// 	err = db.UpdateScreenShotStatusByCode(screenShot.RefCode, printscrape.StatusSuccess)
+// 	if err != nil {
+// 		log.Fatalf("could not update scrap status to success, err: %v", err)
+// 	}
+// }
+
+func testFn(cmd *cobra.Command, args []string) {
+
+	//init db client
 	db, err := postgres.NewClient(getDataSource(cfg.FromEnv()), cfg.FromEnv().MaxDBConnections)
-	if err != nil {
-		log.Fatalf("could not connect to DB, err: %v", err)
+		if err != nil {
+			log.Fatalf("could not connect to DB, err: %v", err)
+		}
+
+
+	fileManager := file.NewManager()
+
+	storage := printscrape.Storage{
+		Dm:db,
+		Fm:fileManager,
 	}
-	// find the resume point, if any.
-	lastCode, err := db.GetLatestCreatedScrapCode()
+
+	//config:=cfg.FromEnv()
+
+	// find the resume point if any
+	lastCode, err := storage.Dm.GetLatestCreatedScreenShotCode()
 	if err != nil {
 		log.Fatalf("could not get latest prnt.sc code, err: %v", err)
 	}
 
-	// create a screenShot item
-	screenShot := printscrape.ScreenShot{
-		CodeCreatedAt: time.Now(),
-		RefCode:       createResumeCodeNumber(lastCode).String(),
-		FileURI:       "",
+	//if not then initialize it to some value.
+	if lastCode == nil {
+		defaultCode:="000000"
+		lastCode = &defaultCode
 	}
 
-	// start saving item to db with status pending
-	_, err = db.CreateScreenShot(screenShot)
-	if err != nil {
-		log.Fatalf("could not save scrap, err: %v", err)
+	index:=createResumeCodeNumber(lastCode)
+	start := time.Now()
+
+	for index.String()!="bbbbbb"{
+
+		time.Sleep(time.Second * 4)
+			// init a screenShot item
+		screenShot := printscrape.ScreenShot{
+			CodeCreatedAt: time.Now(),
+			RefCode:       index.String(),
+			FileURI:       "",
+		}
+
+			// start saving item to db with downloadStatus pending
+		_, err = storage.Dm.CreateScreenShot(screenShot)
+		if err != nil {
+			log.Fatalf("could not save screenshot, err: %v", err)
+		}
+
+		log.Printf(screenShot.RefCode+" ALL IS GOOD!")
+
+		//init the http client
+		scrapper:=phttp.NewClient()
+		//scrapper:=phttp.NewProxyChainClient("http://127.0.0.1","3128")
+
+		imagedata,err :=scrapper.ScrapeImageByCode(screenShot.RefCode)
+		if err !=nil {
+			fmt.Printf("could not download image stream, err: %v",err)
+			err = storage.Dm.UpdateScreenShotStatusByCode(screenShot.RefCode,printscrape.StatusFailure)
+			if err !=nil{
+				log.Fatalf("could not update screenshot status to Failure, err: %v",err)
+			}
+			
+			index.Increment()
+			continue
+		}
+		
+		if imagedata==nil{
+			err = storage.Dm.UpdateScreenShotStatusByCode(screenShot.RefCode,printscrape.StatusFailure)
+			if err !=nil{
+				log.Fatalf("could not update screenshot status to Failure, err: %v",err)
+			}
+			index.Increment()
+			continue
+		}
+
+		err = storage.Dm.UpdateScreenShotStatusByCode(screenShot.RefCode,printscrape.StatusOngoing)
+		if err !=nil{
+			log.Fatalf("could not update screenshot status to ongoing, err: %v",err)
+		}
+
+		fileURI:="/media/slysterous/HDD Vault/print-scrape-images/"+screenShot.RefCode+".png"
+
+		storage.Fm.SaveFile(imagedata,fileURI)
+		
+		screenShot.FileURI = fileURI
+
+		screenShot.Status =printscrape.StatusSuccess
+
+		fmt.Printf("screenshot: %v",screenShot)
+		err = storage.Dm.UpdateScreenShotByCode(screenShot)
+
+		log.Println("DONE!")
+
+		index.Increment()
+		// Code to measure
+		duration := time.Since(start)
+		
+		// Formatted string, such as "2h3m0.5s" or "4.503μs"
+		log.Println(duration)
 	}
 
-	torClient := phttp.NewClient("tor", "9051")
-
-	// client fetch image url for specific code -- return url string
-	//url, err := torClient.FetchScreenShotSourceLinkByCode(screenShot.RefCode)
-	//if err != nil {
-	//	log.Fatalf("could not fetch ScreenShot image link, err: %v",err)
-	//}
-	//
-	//if url == nil {
-	//	log.Fatalf("image link was not found")
-	//}
-
-	// update screenShot status to pending since the process has started.
-	err = db.UpdateScreenShotStatusByCode(screenShot.RefCode,printscrape.StatusOngoing)
-	if err !=nil {
-		log.Fatalf("could not update scrap status, err: %v",err)
-	}
-
-	// create the url where the actual image will be saved.
-	fileUrl:= fmt.Sprintf("%s/%s.jpg",cfg.FromEnv().ScreenShotStorageFolder,screenShot.RefCode)
-
-	//save file to filesystem
-	fileManager := file.NewManager()
-
-	//download and save the image
-	err = torClient.DownloadScreenShot(screenShot.RefCode,fileUrl,fileManager)
-	if err !=nil {
-		log.Fatalf("could not ")
-	}
-
-	screenShot.FileURI=fileUrl
-	screenShot.Status = printscrape.StatusOngoing
+	
 
 
-	err = db.UpdateScreenShotByCode(screenShot)
-	if err != nil {
-		log.Fatalf("could not update scrap status and file url, err: %v",err)
-	}
-
-	//save file to filesystem
-	fileManager := file.NewManager()
-
-	err = fileManager.SaveImage(imageReader, fileUrl)
-	if err != nil {
-		log.Fatalf("could not save image to file system, err: %v",err)
-	}
-
-	err = db.UpdateScreenShotStatusByCode(screenShot.RefCode,printscrape.StatusSuccess)
-	if err != nil {
-		log.Fatalf("could not update scrap status to success, err: %v",err)
-	}
 }
-
-//func testFn(cmd *cobra.Command, args []string) {
-//
-//	//start := time.Now()
-//
-//	number := customNumber.NewNumber(values, "150000")
-//	fmt.Printf("initial number: %s \n", number.String())
-//
-//	for number.String() != "z00000" {
-//		number.Increment()
-//		fmt.Printf("initial number: %s \n", number.String())
-//	}
-//	//fmt.Println(time.Since(start))
-//
-//	// client := phttp.NewClient("tor", "9051")
-//
-//	// //todo design the way to find codes to use
-//	// code := "gae309"
-//	// pathToSave := "gae309.png"
-//
-//	// // client fetch image url for specific code -- return url string
-//	// url, err := client.GetImageUrlByCode(code)
-//	// if err != nil {
-//	// 	log.Fatalf("BUMMER!")
-//	// }
-//
-//	// //download the image by image url --return image (stream)
-//	// imageReader, err := client.DownloadImage(url)
-//
-//	// //save image to file system
-//	// fileManager := file.NewManager()
-//	// err = fileManager.SaveImage(imageReader, pathToSave)
-//	// if err != nil {
-//	// 	log.Fatalf("BUMMER!2")
-//	// }
-//
-//	// //save state for specific code to database.
-//	// dbClient, err := postgres.NewClient(getDataSource(cfg.FromEnv()), cfg.FromEnv().MaxDBConnections)
-//	// ScreenShot:=printscrape.ScreenShot{
-//	// 	RefCode:code,
-//	// 	FileURI:pathToSave,
-//	// }
-//	// _,err=dbClient.CreateScreenShot(ScreenShot)
-//	// if err!=nil{
-//	// 	log.Fatalf("ANTE GAMHSOU")
-//	// }
-//}
 
 func getDataSource(cfg printscrape.Config) string {
 	user := cfg.DatabaseUser

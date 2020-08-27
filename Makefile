@@ -24,6 +24,8 @@ ci:
 
 run:
 	docker-compose down
+	bash ./scripts/create-proxychain-squid-env.sh
+
 	docker-compose -f docker-compose.yml -f docker-compose.local.yml up -d
 
 ci-cleanup:

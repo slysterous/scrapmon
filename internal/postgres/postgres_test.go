@@ -18,7 +18,7 @@ func TestGetLatestCreatedScrapCodeSuccess(t *testing.T) {
 
 	want := "150000"
 
-	const query = "SELECT refCode from scraps ORDER BY codeCreatedAt DESC limit 1"
+	const query = "SELECT refCode from screenshots ORDER BY codeCreatedAt DESC limit 1"
 
 	columns := []string{"RefCode"}
 
@@ -26,7 +26,7 @@ func TestGetLatestCreatedScrapCodeSuccess(t *testing.T) {
 		want,
 	))
 
-	got, err := client.GetLatestCreatedScrapCode()
+	got, err := client.GetLatestCreatedScreenShotCode()
 	if err != nil {
 		t.Fatalf("expected exec not to return error %v", err)
 	}
@@ -94,7 +94,7 @@ func TestCreateScrapSuccess(t *testing.T) {
 		CodeCreatedAt: time.Now(),
 	}
 
-	const query = "INSERT INTO scraps \\(.*\\) VALUES .* RETURNING id"
+	const query = "INSERT INTO screenshots \\(.*\\) VALUES .* RETURNING id"
 	mock.ExpectQuery(query).WithArgs(want.RefCode, want.CodeCreatedAt, want.FileURI).WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(1))
 
 	got, err := client.CreateScreenShot(want)

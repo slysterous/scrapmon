@@ -2,8 +2,7 @@ package file
 
 import (
 	"fmt"
-	"io"
-	"os"
+	"io/ioutil"
 )
 
 // Manager is
@@ -15,25 +14,19 @@ func NewManager() *Manager {
 	return &Manager{}
 }
 
-// SaveImage saves image bytes to a specified file.
-func (m Manager) SaveImageFile(src io.Reader, path string) (err error) {
-	//Create a empty file
-	file, err := os.Create(path)
-	if err != nil {
-		return err
-	}
-	defer func() {
-		errc := file.Close()
-		if errc != nil {
-			err = fmt.Errorf("error while closeing file: %v", err)
-		}
-	}()
+// SaveFile saves image bytes to a specified file.
+func (m Manager) SaveFile(src *[]byte, path string) error {
+
 	//Write the bytes to the file
-	_, err = io.Copy(file, src)
+	err := ioutil.WriteFile(path, *src, 0644)
 	if err != nil {
-		return err
+		return fmt.Errorf("file: could not create file, err: %v",err)
 	}
+	
 	return nil
 }
 
-func ()
+// Purge deletes every file from the file system
+func (m Manager) Purge() error {
+	return nil
+}

@@ -10,6 +10,7 @@ migrate_db() {
     #./migrate -database postgres://postgres:password@print-scrape-db:5432/print-scrape?sslmode=disable -verbose -source file://./migrations up
     while [ $? -ne 0 -a $i -lt 10 ]; do
         echo "Database not ready (attempt #$i), retrying.."
+        echo "./migrate -database postgres://$4:$5@$1:$2/$3?sslmode=disable -verbose -source file://./internal/migrations up"
         sleep 2
         i=`expr $i + 1`
          ./migrate -database postgres://$4:$5@$1:$2/$3?sslmode=disable -verbose -source file://./migrations up

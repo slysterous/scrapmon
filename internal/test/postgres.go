@@ -74,7 +74,7 @@ func truncateTables(db *sql.DB) error {
 	// Disable FK checks, add truncate table commands and then reset FK checks
 	cmds := []string{"SET session_replication_role = 'replica'"}
 	tables := []string{
-		"scraps",
+		"screenshots",
 	}
 	for _, table := range tables {
 		cmds = append(cmds, fmt.Sprintf("TRUNCATE %s CASCADE", table))

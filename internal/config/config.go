@@ -17,7 +17,7 @@ func FromEnv() printscrape.Config {
 		DatabasePassword:        getString("PRINT_SCRAPE_DB_PASSWORD", "password"),
 		MaxDBConnections:        getInt("MAX_DB_CONNECTIONS", 100),
 		Env:                     getString("PRINT_SCRAPE_ENV", "dev"),
-		TorHost:                 getString("TOR_HOST", "tor"),
+		TorHost:                 getString("TOR_HOST", "127.0.0.1"),
 		TorPort:                 getString("TOR_PORT", "9050"),
 		ScreenShotStorageFolder: getString("PRINT_SCRAPE_ScreenShot_STORAGE_FOLDER", "./"),
 	}
@@ -27,7 +27,7 @@ func FromEnv() printscrape.Config {
 func getString(key, fallback string) string {
 	env := os.Getenv(key)
 	if env == "" {
-		log.Printf("debug: missing env variable for key: %s", key)
+		log.Printf("debug: missing env variable for key: %s, using default: %s", key,fallback)
 		return fallback
 	}
 	return env

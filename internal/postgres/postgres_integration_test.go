@@ -25,7 +25,7 @@ func TestClientCreateScrap(t *testing.T) {
 	}
 
 	wantedScrap := printscrape.ScreenShot{
-		RefCode:       "refcode",
+		RefCode:       "aaa000",
 		CodeCreatedAt: time.Now(),
 		FileURI:       "fileuri",
 	}

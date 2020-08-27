@@ -9,7 +9,7 @@ RUN apk add --no-cache tzdata
 
 COPY --from=builder /home/print-scrape/print-scrape .
 COPY --from=builder /home/print-scrape/migrate .
-COPY --from=builder /home/print-scrape/migrations ./migrations
+COPY --from=builder /home/print-scrape/internal/migrations ./internal/migrations
 COPY --from=builder /home/print-scrape/migrate.sh .
 
 CMD [ "sh", "-c",  "/migrate.sh && /print-scrape" ]

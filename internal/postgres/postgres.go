@@ -4,7 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 	"time"
-
+	//pq is the postgres driver for database/sql
+	_ "github.com/lib/pq"
 	"github.com/google/uuid"
 	printscrape "github.com/slysterous/print-scrape/internal/domain"
 )
@@ -44,32 +45,32 @@ func NewClient(dataSource string, maxConnections int) (*Client, error) {
 
 // CreateScreenShot saves a Scrap's info in the database.
 func (c *Client) CreateScreenShot(ss printscrape.ScreenShot) (int, error) {
-	scrap:=transformDomainScrap(ss)
+	scrap := transformDomainScrap(ss)
 	const query = `INSERT INTO screenshots (refCode,codeCreatedAt,fileUri) VALUES ($1, $2, $3) RETURNING id`
 	lastInsertID := 0
 
 	err := c.DB.QueryRow(query, scrap.refCode, scrap.codeCreatedAt, scrap.fileURI).Scan(&lastInsertID)
 	if err != nil {
-		return lastInsertID, fmt.Errorf("postgres: executing insert scrap statement: %v", err)
+		return lastInsertID, fmt.Errorf("postgres: executing insert screenshot statement: %v", err)
 	}
 	return lastInsertID, nil
 }
 
 func (c *Client) UpdateScreenShotStatusByCode(code string, status printscrape.ScreenShotStatus) error {
-	const query = `UPDATE screenshots SET downloadStatus = ? WHERE refCode = ?;`
-	_,err:= c.DB.Exec(query,string(status),code)
-	if err !=nil {
-		return fmt.Errorf("postgres: executing update status on scrap: %v",err)
+	const query = `UPDATE screenshots SET downloadStatus = $1 WHERE refCode = $2;`
+	_, err := c.DB.Exec(query, string(status), code)
+	if err != nil {
+		return fmt.Errorf("postgres: executing update status on scrap: %v", err)
 	}
 	return nil
 }
 
 func (c *Client) UpdateScreenShotByCode(ss printscrape.ScreenShot) error {
-	scrap:=transformDomainScrap(ss)
-	const query = `UPDATE screenshots SET fileUri = ?,downloadStatus = ? WHERE refCode = ?;`
-	_, err := c.DB.Exec(query,scrap.fileURI,scrap.downloadStatus)
-	if err !=nil {
-		return fmt.Errorf("postgres: executing update of scrap: %v",err)
+	scrap := transformDomainScrap(ss)
+	const query = `UPDATE screenshots SET fileUri = $1,downloadStatus = $2 WHERE refCode = $3;`
+	_, err := c.DB.Exec(query, scrap.fileURI, scrap.downloadStatus,scrap.refCode)
+	if err != nil {
+		return fmt.Errorf("postgres: executing update of scrap: %v", err)
 	}
 	return nil
 }
@@ -87,7 +88,7 @@ func (c *Client) GetLatestCreatedScreenShotCode() (*string, error) {
 	case nil:
 		return &code, nil
 	default:
-		return nil, fmt.Errorf("postgres: executing select scrap by code statement: %v", err)
+		return nil, fmt.Errorf("postgres: executing select screenshot by code statement: %v", err)
 	}
 
 }
@@ -137,10 +138,10 @@ func transformScrap(sc scrap) *printscrape.ScreenShot {
 
 func transformDomainScrap(screenShot printscrape.ScreenShot) scrap {
 	return scrap{
-		id:screenShot.ID,
-		codeCreatedAt:screenShot.CodeCreatedAt,
-		downloadStatus:string(screenShot.Status),
-		refCode:screenShot.RefCode,
-		fileURI:screenShot.FileURI,
+		id:             screenShot.ID,
+		codeCreatedAt:  screenShot.CodeCreatedAt,
+		downloadStatus: string(screenShot.Status),
+		refCode:        screenShot.RefCode,
+		fileURI:        screenShot.FileURI,
 	}
 }
