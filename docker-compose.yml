@@ -17,14 +17,22 @@ services:
       PRINT_SCRAPE_DB_NAME: "print-scrape"
     depends_on:
       - print-scrape-db
-  squid:
-    container_name: squid
-    hostname: squid
-    image: wrouesnel/docker-squid4
-    env_file: 
-      - "./squid-proxy-list.env"
-    ports:
-      - "3128:3128"
+  # squid:
+  #   container_name: squid
+  #   hostname: squid
+  #   image: squid:latest
+  #   # env_file: 
+  #   #   - ./squid-proxy-list.env
+  #   environment: 
+  #     VISIBLE_HOSTNAME: docker-squid4-print-scrape
+  #     PROXYCHAIN: "yes"
+  #     PROXYCHAIN_TYPE: dynamic_chain
+  #     USER: root
+  #   volumes:
+  #     - ./proxychains.conf:/etc/extrachains.conf
+  #     - ./squid.conf:/etc/squid4/squid.conf
+  #   ports:
+  #     - "3128:3128"
   print-scrape-db:
     image: postgres:12.0
     container_name: print-scrape-db

@@ -3,7 +3,7 @@ package http
 import (
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
-	printscrape "github.com/slysterous/print-scrape/internal/domain"
+//	printscrape "github.com/slysterous/print-scrape/internal/domain"
 	"io"
 	"io/ioutil"
 	"log"
@@ -111,25 +111,28 @@ func (c Client) scrapeScreenShotURLByCode(code string) (*string,error){
 
 // ScrapeImageByCode fetches an prnt.sc image stream.
 func (c Client) ScrapeImageByCode(code string) (*[]byte, error) {
-	url,err:=c.scrapeScreenShotURLByCode(code)
-	if err!=nil {
-		return nil,err
-	}
+
+	url:="https://i.imgur.com/"+code+".png"
 	
-	if url==nil {
-		return nil,fmt.Errorf("http: could not find a screenshot url")
-	}
+	// url,err:=c.scrapeScreenShotURLByCode(code)
+	// if err!=nil {
+	// 	return nil,err
+	// }
+	
+	// if url==nil {
+	// 	return nil,fmt.Errorf("http: could not find a screenshot url")
+	// }
 
-	if !printscrape.IsScreenShotURLValid(*url){
-		return nil,fmt.Errorf("http: invalid screenshot url detected")
-	}
+	// if !printscrape.IsScreenShotURLValid(*url){
+	// 	return nil,fmt.Errorf("http: invalid screenshot url detected")
+	// }
 
-	log.Printf("URL: %s",*url)
+	// log.Printf("URL: %s",*url)
 
 	//Get the response bytes from the url
-	response, err := http.Get(*url)
+	response, err := c.httpClient.Get(url)
     if err != nil {
-		return nil,fmt.Errorf("http: could not download image stream for url: %s, status: %d, error %v",*url,response.StatusCode,err)
+		return nil,fmt.Errorf("http: could not download image stream for url: %s, status: %d, error %v",url,response.StatusCode,err)
     }
 	defer response.Body.Close()
 	contents, err := ioutil.ReadAll(response.Body)

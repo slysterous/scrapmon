@@ -2,12 +2,13 @@ package domain
 
 import (
 	"fmt"
-	"time"
 	"strings"
+	"time"
 )
 
 // CustomNumberDigitValues defines the allowed digits of the custom arithmetic system to be used
-var CustomNumberDigitValues = []rune{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'}
+//var CustomNumberDigitValues = []rune{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'}
+var CustomNumberDigitValues = []rune{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'}
 
 // ScreenShotStatus describes the status of a ScreenShot.
 type ScreenShotStatus string
@@ -90,9 +91,8 @@ func (s *Storage) Purge() error {
 	return nil
 }
 
-
 // IsScreenShotURLValid checks if a screenshot url is valid to be processed.
-func IsScreenShotURLValid(url string) bool{
+func IsScreenShotURLValid(url string) bool {
 	fmt.Println(url)
-	return strings.Contains(url,"https://")
+	return strings.Contains(url, "https://")
 }
