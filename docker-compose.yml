@@ -15,24 +15,22 @@ services:
       PRINT_SCRAPE_DB_USER: "postgres"
       PRINT_SCRAPE_DB_PASSWORD: "password"
       PRINT_SCRAPE_DB_NAME: "print-scrape"
+    networks:
+      - print-scrape-network  
     depends_on:
       - print-scrape-db
-  # squid:
-  #   container_name: squid
-  #   hostname: squid
-  #   image: squid:latest
-  #   # env_file: 
-  #   #   - ./squid-proxy-list.env
-  #   environment: 
-  #     VISIBLE_HOSTNAME: docker-squid4-print-scrape
-  #     PROXYCHAIN: "yes"
-  #     PROXYCHAIN_TYPE: dynamic_chain
-  #     USER: root
-  #   volumes:
-  #     - ./proxychains.conf:/etc/extrachains.conf
-  #     - ./squid.conf:/etc/squid4/squid.conf
-  #   ports:
-  #     - "3128:3128"
+  tor:
+    image: dperson/torproxy
+    container_name: tor
+    hostname: tor
+    environment:
+      TORUSER: root
+      TOR_NewCircuitPeriod: 5
+      TOR_NumEntryGuards: 8
+    networks:
+      - print-scrape-network
+    ports: 
+      - "8118:8118"
   print-scrape-db:
     image: postgres:12.0
     container_name: print-scrape-db
@@ -41,5 +39,39 @@ services:
       POSTGRES_PASSWORD: "password"
       POSTGRES_DB: "print-scrape"
       POSTGRES_PORT: "5432"
+    networks:
+      - print-scrape-network  
     ports:
       - "5432:5432"
+  print-scrape-migrations:
+    build:
+      context: ./
+      dockerfile: ./scripts/Dockerfile.migrations
+    container_name: print-scrape-migrations
+    hostname: print-scrape-migrations
+    environment: 
+      PRINT_SCRAPE_DB: print-scrape
+      PRINT_SCRAPE_DB_HOST: print-scrape-db
+      PRINT_SCRAPE_DB_PORT: 5432
+      PRINT_SCRAPE_DB_NAME: print-scrape
+      PRINT_SCRAPE_DB_USER: postgres
+      PRINT_SCRAPE_DB_PASSWORD: password
+    networks:
+      - print-scrape-network
+    volumes:  
+      - "./internal/migrations/:/migrations"
+      - "${PWD}/scripts/wait-for-postgres.sh:/scripts/wait-for-postgres.sh"
+    #command: ["-path", "/migrations", "-database",  "postgres://postgres:password@print-scrape-db:5432/print-scrape?sslmode=disable", "up", "3"]
+    depends_on:
+      - print-scrape-db
+  # print-scrape-db-check:
+  #   image: jwilder/dockerize
+  #   container_name: print-scrape-db-check
+  #   hostname: print-scrape-db-check
+  #   command: dockerize -wait tcp://print-scrape-db:5432
+  #   networks:
+  #     - print-scrape-network
+  #   depends_on: 
+  #     - print-scrape-db
+networks:
+  print-scrape-network:

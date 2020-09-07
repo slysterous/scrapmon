@@ -27,7 +27,7 @@ func FromEnv() printscrape.Config {
 func getString(key, fallback string) string {
 	env := os.Getenv(key)
 	if env == "" {
-		log.Printf("debug: missing env variable for key: %s, using default: %s", key,fallback)
+		log.Printf("debug: missing env variable for key: %s, using default: %s", key, fallback)
 		return fallback
 	}
 	return env

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"container/list"
 	"container/ring"
+	"strings"
 )
 
 // => 0 1 2 3 4 5 6 7 8 9 a b c d e f g h i j k l m n o p q r s t u v w x y z  arithmetic system
@@ -29,12 +30,13 @@ import (
 // Number represents a custom number.
 type Number struct {
 	Digits *list.List
+	DigitValues []rune
 }
 
 // NewNumber initializes a CustomNumber list of x digits.
 func NewNumber(values []rune, initial string) Number {
 	// initialise a new number.
-	number := Number{Digits: list.New()}
+	number := Number{Digits: list.New(),DigitValues:values}
 	// add digits to the number along with their state.
 	for i := 0; i < len(initial); i++ {
 		digit := newDigit(values, rune(initial[i]))
@@ -80,7 +82,13 @@ func (p *Number) Increment() {
 			// if the digit is being reset then we
 			// have an arithmetic holding
 			if r.Value != '0' {
+				
 				return
+			}
+			
+			if e.Prev() == nil {
+				d:=newDigit(p.DigitValues,p.DigitValues[0])
+				p.Digits.PushFront(d)
 			}
 		}
 	}
@@ -102,7 +110,12 @@ func (p Number) String() string {
 		}
 
 		numberBytes.WriteString(string(v))
-
 	}
 	return numberBytes.String()
+}
+
+// SmartString returns a string representation of a customnumber while removing leading 0s.
+func (p Number) SmartString() string {
+	str := p.String()
+	return strings.TrimLeft(str, "0")
 }

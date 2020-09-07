@@ -14,6 +14,7 @@ import (
 
 	"github.com/robertkrimen/otto"
 )
+
 var (
 	jschlRE = regexp.MustCompile(`name="jschl_vc" value="(\w+)"`)
 	passRE  = regexp.MustCompile(`name="pass" value="(.+?)"`)

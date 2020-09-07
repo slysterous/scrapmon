@@ -5,8 +5,9 @@ help:
 	@echo "  fmt             use to gofmt all files excluding vendor."
 	@echo "  fmtcheck        use to check gofmt compatibility of files."
 	@echo "  ci              use to run CI pipeline (via docker)."
-	@echo "  ci-cleanup      to kill & remove all ci containers."
-	@echo "  run       use to run the project locally (via docker)."
+	@echo "  ci-cleanup      use to kill & remove all ci containers."
+	@echo "  run       		 use to run the project locally (via docker).It also executes migrations"
+	@echo "  migrate  		 use to run migrations
 
 lint:
 	golint -set_exit_status=1 `go list ./...`
@@ -17,16 +18,16 @@ fmtcheck:
 ci:
 	docker-compose down
 	docker-compose build
-	docker-compose up -d
+	docker-compose -f docker-compose.yml -f docker-compose.ci.yml up -d --build
 	docker-compose ps
 	docker-compose run print-scrape-ci ./scripts/ci.sh
 	docker-compose down
 
 run:
 	docker-compose down
-	bash ./scripts/create-proxychain-squid-env.sh
-
-	docker-compose -f docker-compose.yml -f docker-compose.local.yml up -d
+	docker-compose -f docker-compose.yml -f docker-compose.ci.yml up -d --build
+migrate:
+	./scripts/migrate.sh
 
 ci-cleanup:
 	docker-compose down

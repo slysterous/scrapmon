@@ -20,9 +20,9 @@ func (m Manager) SaveFile(src *[]byte, path string) error {
 	//Write the bytes to the file
 	err := ioutil.WriteFile(path, *src, 0644)
 	if err != nil {
-		return fmt.Errorf("file: could not create file, err: %v",err)
+		return fmt.Errorf("file: could not create file, err: %v", err)
 	}
-	
+
 	return nil
 }
 

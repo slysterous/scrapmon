@@ -1,0 +1,14 @@
+FROM golang:1.13 as builder
+WORKDIR /home/print-scrape
+COPY . .
+RUN wget https://github.com/golang-migrate/migrate/releases/download/v4.1.0/migrate.linux-amd64.tar.gz && tar -xvf migrate.linux-amd64.tar.gz && mv migrate.linux-amd64 migrate
+
+FROM alpine
+
+RUN apk add --no-cache tzdata
+
+COPY --from=builder /home/print-scrape/migrate .
+COPY --from=builder /home/print-scrape/internal/migrations ./internal/migrations
+COPY --from=builder /home/print-scrape/scripts/migrate.sh .
+RUN ls -l
+CMD [ "sh", "./migrate.sh" ]

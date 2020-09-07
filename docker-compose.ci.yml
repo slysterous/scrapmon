@@ -1,0 +1,23 @@
+version: "3.3"
+
+services:
+  print-scrape-ci:
+    image: print-scrape-ci
+    build:
+      context: ./
+      dockerfile: ./scripts/Dockerfile
+    container_name: print-scrape-ci
+    
+    environment:
+      PRINT_SCRAPE_HTTP_ADDR: ":8080"
+      PRINT_SCRAPE_ENV: "prod"
+      PRINT_SCRAPE_DB_HOST: "print-scrape-db"
+      PRINT_SCRAPE_DB_PORT: "5432"
+      PRINT_SCRAPE_DB_USER: "postgres"
+      PRINT_SCRAPE_DB_PASSWORD: "password"
+      PRINT_SCRAPE_DB_NAME: "print-scrape"
+    depends_on:
+      - print-scrape-db
+  print-scrape-db:
+    ports:
+      - "5432:5432"

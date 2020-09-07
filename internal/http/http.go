@@ -3,7 +3,8 @@ package http
 import (
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
-//	printscrape "github.com/slysterous/print-scrape/internal/domain"
+	"strings"
+	//	printscrape "github.com/slysterous/print-scrape/internal/domain"
 	"io"
 	"io/ioutil"
 	"log"
@@ -17,20 +18,18 @@ type Client struct {
 	httpClient *http.Client
 }
 
-
 // NewClient returns a new http client.
-func NewClient() *Client{
-	
+func NewClient() *Client {
+
 	httpClient := &http.Client{
-		Transport: &http.Transport{
-        },
+		Transport: &http.Transport{},
 	}
 
 	var err error
 	httpClient.Transport, err = NewRoundTripper(httpClient.Transport)
 
-	if err !=nil {
-		log.Fatalf("http: error creating http roundtripper transport, err: %v",err)
+	if err != nil {
+		log.Fatalf("http: error creating http roundtripper transport, err: %v", err)
 	}
 
 	return &Client{
@@ -39,25 +38,28 @@ func NewClient() *Client{
 }
 
 // NewProxyChainClient returns a new http client that utilizes a proxy chain.
-func NewProxyChainClient(proxyURL, proxyPort string) *Client {
-	
-	ProxyString := fmt.Sprintf("%s:%s", proxyURL, proxyPort)
+func NewProxyChainClient(host, port string) *Client {
 
-	ProxyURL, err := url.Parse(ProxyString)
+	torProxyString := fmt.Sprintf("socks5://%s:%s", host, port)
+	//torProxyString := fmt.Sprintf("socks5://%s:%s", "127.0.0.1", "9050")
+	torProxyURL, err := url.Parse(torProxyString)
 	if err != nil {
-		log.Fatalf("http: error parsing proxychain URL:", ProxyString, ". ", err)
+		log.Fatal("http: error parsing Tor proxy URL:", torProxyString, ". ", err)
 	}
- 
+
 	httpClient := &http.Client{
 		Transport: &http.Transport{
-			Proxy: http.ProxyURL(ProxyURL),
-        },
+			Proxy: http.ProxyURL(torProxyURL),
+		},
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
 	}
 
 	httpClient.Transport, err = NewRoundTripper(httpClient.Transport)
 
-	if err !=nil {
-		log.Fatalf("http: error creating http roundtripper transport, err: %v",err)
+	if err != nil {
+		log.Fatalf("http: error creating http roundtripper transport, err: %v", err)
 	}
 
 	return &Client{
@@ -66,29 +68,29 @@ func NewProxyChainClient(proxyURL, proxyPort string) *Client {
 }
 
 // scrapeScreenShotURLByCode fetches a pnt.sc image actual url.
-func (c Client) scrapeScreenShotURLByCode(code string) (*string,error){
+func (c Client) scrapeScreenShotURLByCode(code string) (*string, error) {
 
-	requestURL:="https://prnt.sc/" + code
-	
+	requestURL := "https://prnt.sc/" + code
+
 	req, err := http.NewRequest(http.MethodGet, requestURL, nil)
 	if err != nil {
-		return nil,fmt.Errorf("htto: creating a new get request, error: %v",err)
+		return nil, fmt.Errorf("htto: creating a new get request, error: %v", err)
 	}
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("http: fetching url image from: %s ,error: %v", requestURL, err)
 	}
-	
-	bodyReader:=resp.Body
-	
+
+	bodyReader := resp.Body
+
 	defer func(bodyReader io.ReadCloser) {
 		errC := bodyReader.Close()
 		if errC != nil {
 			log.Fatal("http: closing bodyReader")
 		}
 	}(bodyReader)
-	
+
 	var screenShotURL string
 
 	doc, err := goquery.NewDocumentFromReader(bodyReader)
@@ -108,17 +110,17 @@ func (c Client) scrapeScreenShotURLByCode(code string) (*string,error){
 	return &screenShotURL, nil
 }
 
-
 // ScrapeImageByCode fetches an prnt.sc image stream.
-func (c Client) ScrapeImageByCode(code string) (*[]byte, error) {
+func (c Client) ScrapeImageByCode(code string) (*[]byte, *string, error) {
 
-	url:="https://i.imgur.com/"+code+".png"
-	
+	url := "https://i.imgur.com/" + code + ".png"
+
+	//url:="https://www.ipqualityscore.com/tor-ip-address-check"
 	// url,err:=c.scrapeScreenShotURLByCode(code)
 	// if err!=nil {
 	// 	return nil,err
 	// }
-	
+
 	// if url==nil {
 	// 	return nil,fmt.Errorf("http: could not find a screenshot url")
 	// }
@@ -127,22 +129,37 @@ func (c Client) ScrapeImageByCode(code string) (*[]byte, error) {
 	// 	return nil,fmt.Errorf("http: invalid screenshot url detected")
 	// }
 
-	// log.Printf("URL: %s",*url)
+	log.Printf("URL: %s", url)
 
 	//Get the response bytes from the url
 	response, err := c.httpClient.Get(url)
-    if err != nil {
-		return nil,fmt.Errorf("http: could not download image stream for url: %s, status: %d, error %v",url,response.StatusCode,err)
-    }
-	defer response.Body.Close()
-	contents, err := ioutil.ReadAll(response.Body)
-	if err !=nil{
-		return nil,fmt.Errorf("http: could not extract data from imagestream, err: %v",err)
+	if err != nil {
+		return nil, nil, fmt.Errorf("http: could not download image stream for url: %s, error %v", url, err)
 	}
 
-	return &contents,nil
-}
+	defer response.Body.Close()
 
+	log.Printf("STATUS: %d", response.StatusCode)
+
+	if response.StatusCode == 404 || response.StatusCode == 302 {
+		log.Printf("NOT FOUND! STATUS: %d", response.StatusCode)
+		return nil, nil, nil
+	}
+
+	contents, err := ioutil.ReadAll(response.Body)
+
+	//bodyString := string(contents)
+	//fmt.Printf("RESPONSE: %v",bodyString)
+
+	if err != nil {
+		return nil, nil, fmt.Errorf("http: could not extract data from imagestream, err: %v", err)
+	}
+
+	contentType := response.Header.Get("Content-Type")
+	imageType := strings.TrimLeft(contentType, "image/")
+
+	return &contents, &imageType, nil
+}
 
 // // GetImageUrlByCode fetches a ScreenShot's actual img url from a code.
 // func (c Client) GetImageUrlByCode(code string) (string, error) {

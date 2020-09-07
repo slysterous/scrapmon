@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 	//pq is the postgres driver for database/sql
-	_ "github.com/lib/pq"
 	"github.com/google/uuid"
+	_ "github.com/lib/pq"
 	printscrape "github.com/slysterous/print-scrape/internal/domain"
 )
 
@@ -68,7 +68,7 @@ func (c *Client) UpdateScreenShotStatusByCode(code string, status printscrape.Sc
 func (c *Client) UpdateScreenShotByCode(ss printscrape.ScreenShot) error {
 	scrap := transformDomainScrap(ss)
 	const query = `UPDATE screenshots SET fileUri = $1,downloadStatus = $2 WHERE refCode = $3;`
-	_, err := c.DB.Exec(query, scrap.fileURI, scrap.downloadStatus,scrap.refCode)
+	_, err := c.DB.Exec(query, scrap.fileURI, scrap.downloadStatus, scrap.refCode)
 	if err != nil {
 		return fmt.Errorf("postgres: executing update of scrap: %v", err)
 	}
@@ -86,11 +86,41 @@ func (c *Client) GetLatestCreatedScreenShotCode() (*string, error) {
 	case sql.ErrNoRows:
 		return nil, nil
 	case nil:
+		fmt.Println("GAMIOLA")
 		return &code, nil
 	default:
 		return nil, fmt.Errorf("postgres: executing select screenshot by code statement: %v", err)
 	}
 
+}
+
+// CodeAlreadyExists searches for the existence of an entry.
+func (c *Client) CodeAlreadyExists(code string) (bool, error) {
+	s := scrap{
+		id:      0,
+		uuid:    uuid.UUID{},
+		refCode: code,
+		fileURI: "",
+	}
+	row := c.DB.QueryRow(`
+		SELECT
+		fileURI
+		FROM ScreenShots
+		WHERE refCode=$1
+		AND fileURI!=null
+	
+	`, code)
+
+	err := row.Scan(&s.fileURI)
+
+	switch err {
+	case sql.ErrNoRows:
+		return false, nil
+	case nil:
+		return true, nil
+	default:
+		return false, fmt.Errorf("postgres: executing image already exists statement: %v", err)
+	}
 }
 
 // GetScrapByCode Gets a scrapped ScreenShot from the database
