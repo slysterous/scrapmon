@@ -1,11 +1,10 @@
 package domain
 
 import (
-	"context"
 	"fmt"
+	customNumber "github.com/slysterous/print-scrape/pkg/customnumber"
 	"strings"
 	"time"
-	customNumber "github.com/slysterous/print-scrape/pkg/customnumber"
 )
 
 // CustomNumberDigitValues defines the allowed digits of the custom arithmetic system to be used
@@ -45,6 +44,12 @@ type Storage struct {
 	Dm DatabaseManager
 }
 
+// CommandManager handles commands.
+type CommandManager struct {
+	Storage  Storage
+	Scrapper ImageScrapper
+}
+
 // ScreenShot defines a scrapped ScreenShot.
 type ScreenShot struct {
 	ID            int64
@@ -54,15 +59,19 @@ type ScreenShot struct {
 	Status        ScreenShotStatus
 }
 
-// CommandFunction defines a function that contains the logic of a command.
-type CommandFunction func () error
-
-
-// CommandHandler defines the cli client interactions.
-type CommandHandler interface {
-	HandleStartCommand(ctx context.Context,fn CommandFunction) error
+// Service describes i don't know
+type Service struct {
+	storage  Storage
+	scrapper ImageScrapper
 }
 
+// CommandFunction defines a function that contains the logic of a command.
+type CommandFunction func() error
+
+// // CommandHandler defines the cli client interactions.
+// type CommandHandler interface {
+// 	HandleStartCommand(ctx context.Context,fn CommandFunction) error
+// }
 
 // Purger defines the purging behaviour.
 type Purger interface {
@@ -78,7 +87,6 @@ type DatabaseManager interface {
 	CodeAlreadyExists(code string) (bool, error)
 	Purger
 }
-
 
 // FileManager defins the file management behaviour.
 type FileManager interface {
@@ -111,11 +119,11 @@ func IsScreenShotURLValid(url string) bool {
 }
 
 // StartCommand is what happens when the command is executed.
-func StartCommand (store Storage,scrapper ImageScrapper,fromCode string,iterations int) error {
-	
+func (cm CommandManager) StartCommand(fromCode string, iterations int) error {
+
 	//if no code was provided, then we resume from the last created code or from the beginning.
 	if fromCode == "" {
-		lastCode, err := store.Dm.GetLatestCreatedScreenShotCode()
+		lastCode, err := cm.Storage.Dm.GetLatestCreatedScreenShotCode()
 		if err != nil {
 			return fmt.Errorf("could not get latest prnt.sc code, err: %v", err)
 		}
@@ -128,11 +136,11 @@ func StartCommand (store Storage,scrapper ImageScrapper,fromCode string,iteratio
 
 	index := createResumeCodeNumber(&fromCode)
 
-		//iterate untill we reach the last possible image or run out of iterations.
+	//iterate untill we reach the last possible image or run out of iterations.
 	for index.String() != "ZZZZZZZZ" && iterations > 0 {
 		fmt.Printf("ITERATIONS LEFT: %v \n", iterations)
 
-		existsAlready, err := store.Dm.CodeAlreadyExists(index.SmartString())
+		existsAlready, err := cm.Storage.Dm.CodeAlreadyExists(index.SmartString())
 		if err != nil {
 			return fmt.Errorf("could not get image, err: %v", err)
 		}
@@ -150,15 +158,15 @@ func StartCommand (store Storage,scrapper ImageScrapper,fromCode string,iteratio
 		}
 
 		// start saving item to db with downloadStatus pending
-		_, err = store.Dm.CreateScreenShot(screenShot)
+		_, err = cm.Storage.Dm.CreateScreenShot(screenShot)
 		if err != nil {
 			return fmt.Errorf("could not save screenshot, err: %v", err)
 		}
 
-		imagedata, imageType, err := scrapper.ScrapeImageByCode(screenShot.RefCode)
+		imagedata, imageType, err := cm.Scrapper.ScrapeImageByCode(screenShot.RefCode)
 		if err != nil {
 			fmt.Printf("could not download image stream, err: %v", err)
-			err = store.Dm.UpdateScreenShotStatusByCode(screenShot.RefCode, StatusFailure)
+			err = cm.Storage.Dm.UpdateScreenShotStatusByCode(screenShot.RefCode, StatusFailure)
 			if err != nil {
 				return fmt.Errorf("could not update screenshot status to Failure, err: %v", err)
 			}
@@ -169,7 +177,7 @@ func StartCommand (store Storage,scrapper ImageScrapper,fromCode string,iteratio
 		}
 
 		if imagedata == nil {
-			err = store.Dm.UpdateScreenShotStatusByCode(screenShot.RefCode, StatusFailure)
+			err = cm.Storage.Dm.UpdateScreenShotStatusByCode(screenShot.RefCode, StatusFailure)
 			if err != nil {
 				return fmt.Errorf("could not update screenshot status to Failure, err: %v", err)
 			}
@@ -178,16 +186,16 @@ func StartCommand (store Storage,scrapper ImageScrapper,fromCode string,iteratio
 			continue
 		}
 
-		err = store.Dm.UpdateScreenShotStatusByCode(screenShot.RefCode, StatusOngoing)
+		err = cm.Storage.Dm.UpdateScreenShotStatusByCode(screenShot.RefCode, StatusOngoing)
 		if err != nil {
 			return fmt.Errorf("could not update screenshot status to ongoing, err: %v", err)
 		}
 
 		fileURI := "/media/slysterous/HDD Vault/imgur-images/" + screenShot.RefCode + "." + *imageType
 
-		err = store.Fm.SaveFile(imagedata, fileURI)
-		if err!= nil {
-			return fmt.Errorf("could not save image to filesystem, err: %v",err)
+		err = cm.Storage.Fm.SaveFile(imagedata, fileURI)
+		if err != nil {
+			return fmt.Errorf("could not save image to filesystem, err: %v", err)
 		}
 
 		screenShot.FileURI = fileURI
@@ -195,7 +203,7 @@ func StartCommand (store Storage,scrapper ImageScrapper,fromCode string,iteratio
 		screenShot.Status = StatusSuccess
 
 		fmt.Printf("screenshot: %v", screenShot)
-		err = store.Dm.UpdateScreenShotByCode(screenShot)
+		err = cm.Storage.Dm.UpdateScreenShotByCode(screenShot)
 
 		index.Increment()
 		iterations--
@@ -208,19 +216,18 @@ func StartCommand (store Storage,scrapper ImageScrapper,fromCode string,iteratio
 }
 
 // PurgeCommand is what happens when the command is executed.
-func PurgeCommand (store Storage) error {
-	err:= store.Purge()
-	if err!=nil{
+func (cm CommandManager) PurgeCommand() error {
+	err := cm.Storage.Purge()
+	if err != nil {
 		return fmt.Errorf("could not purge storage, err: %v", err)
 	}
 	return nil
 }
 
-
 func createResumeCodeNumber(code *string) customNumber.Number {
-	// if no code was found 
+	// if no code was found
 	// or if were starting from 0 then start from the beginning.
-	if code == nil || *code == "0"{
+	if code == nil || *code == "0" {
 		return customNumber.NewNumber(CustomNumberDigitValues, "0")
 	}
 

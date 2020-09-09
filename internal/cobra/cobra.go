@@ -7,37 +7,38 @@ import (
 	"strconv"
 )
 
-
 // Client is responsible for interacting with cobra.
 type Client struct {
 	rootCmd        *cobra.Command
-	store printscrape.Storage
-	scrapper printscrape.ImageScrapper
+	commandManager printscrape.CommandManager
 }
 
 // NewClient constructs a new Client.
-func NewClient() *Client {
+func NewClient(cm printscrape.CommandManager) *Client {
 	var rootCmd = &cobra.Command{
 		Use:   "print-scrape",
 		Short: "Prntscr Scrapper",
 		Long:  "A highly concurrent PrntScr Scrapper.",
 	}
 	return &Client{
-		rootCmd: rootCmd,
+		rootCmd:        rootCmd,
+		commandManager: cm,
 	}
 
 }
 
-// RegisterStartCommand registers the start command to cobra
-func (c Client) RegisterStartCommand() {
-	startCmd := c.createStartCmd(c.store,c.scrapper)
-	c.rootCmd.AddCommand(startCmd)
-}
-
-//RegisterPurgeCommand registers the purge command to cobra
+//RegisterPurgeCommand registers the purge command to cobra.
 func (c Client) RegisterPurgeCommand() {
-	purgeCmd := c.createPurgeCmd(c.store)
-	c.rootCmd.AddCommand(purgeCmd)
+	purgeCommand := &cobra.Command{
+		Use:   "purge",
+		Short: "Purges db and filesystem storage",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return c.commandManager.PurgeCommand()
+		},
+		SilenceErrors: true,
+	}
+
+	c.rootCmd.AddCommand(purgeCommand)
 }
 
 // Execute executes the root command.
@@ -45,43 +46,29 @@ func (c Client) Execute() error {
 	return c.rootCmd.Execute()
 }
 
-func (c Client) createStartCmd(store printscrape.Storage, scrapper printscrape.ImageScrapper) *cobra.Command {
+// RegisterStartCommand registers the start command to cobra.
+func (c Client) RegisterStartCommand() {
 	startCommand := &cobra.Command{
 		Use:   "start",
 		Short: "Starts scraping images from imgur",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			from,err :=handleFromParam(cmd)
-			if err !=nil {
-				return fmt.Errorf("command validation error, err: %v",err)
+			from, err := handleFromParam(cmd)
+			if err != nil {
+				return fmt.Errorf("command validation error, err: %v", err)
 			}
-			iterations,err:=handleIterationsParam(cmd)
-			if err !=nil {
-				return fmt.Errorf("command validation error, err: %v",err)
+			iterations, err := handleIterationsParam(cmd)
+			if err != nil {
+				return fmt.Errorf("command validation error, err: %v", err)
 			}
-			return printscrape.StartCommand(store,scrapper,from,iterations) 
+			return c.commandManager.StartCommand(from, iterations)
 		},
 		SilenceErrors: true,
 	}
 	startCommand.Flags().StringP("from", "f", "", "starting imgur image code")
 	startCommand.Flags().StringP("iterations", "i", "", "how many images should be downloaded")
 
-	return startCommand
+	c.rootCmd.AddCommand(startCommand)
 }
-
-func (c Client) createPurgeCmd(store printscrape.Storage) *cobra.Command {
-	purgeCommand := &cobra.Command{
-		Use: "purge",
-		Short: "Purges db and filesystem storage",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return printscrape.PurgeCommand(store)
-		},
-		SilenceErrors:true,
-	}
-
-	return purgeCommand
-}
-
-
 
 func handleFromParam(cmd *cobra.Command) (string, error) {
 	fromCode, err := cmd.Flags().GetString("from")

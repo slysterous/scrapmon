@@ -29,14 +29,14 @@ import (
 
 // Number represents a custom number.
 type Number struct {
-	Digits *list.List
+	Digits      *list.List
 	DigitValues []rune
 }
 
 // NewNumber initializes a CustomNumber list of x digits.
 func NewNumber(values []rune, initial string) Number {
 	// initialise a new number.
-	number := Number{Digits: list.New(),DigitValues:values}
+	number := Number{Digits: list.New(), DigitValues: values}
 	// add digits to the number along with their state.
 	for i := 0; i < len(initial); i++ {
 		digit := newDigit(values, rune(initial[i]))
@@ -82,12 +82,12 @@ func (p *Number) Increment() {
 			// if the digit is being reset then we
 			// have an arithmetic holding
 			if r.Value != '0' {
-				
+
 				return
 			}
-			
+
 			if e.Prev() == nil {
-				d:=newDigit(p.DigitValues,p.DigitValues[0])
+				d := newDigit(p.DigitValues, p.DigitValues[0])
 				p.Digits.PushFront(d)
 			}
 		}
