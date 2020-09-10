@@ -5,7 +5,6 @@ import (
 	customNumber "github.com/slysterous/print-scrape/pkg/customnumber"
 	"strings"
 	"time"
-	"runtime"
 )
 
 // CustomNumberDigitValues defines the allowed digits of the custom arithmetic system to be used
@@ -120,11 +119,11 @@ func IsScreenShotURLValid(url string) bool {
 }
 
 // StartCommand is what happens when the command is executed.
-func (cm CommandManager) StartCommand (fromCode string,iterations int) error {
+func (cm CommandManager) StartCommand(fromCode string, iterations int) error {
 	//start:=time.Now()
 
 	//imageCount:= 0
-	
+
 	//if no code was provided, then we resume from the last created code or from the beginning.
 	if fromCode == "" {
 		lastCode, err := cm.Storage.Dm.GetLatestCreatedScreenShotCode()
@@ -137,47 +136,98 @@ func (cm CommandManager) StartCommand (fromCode string,iterations int) error {
 			fromCode = *lastCode
 		}
 	}
-	procedureComplete:= make(chan bool)
-	//done := make(chan bool)
-	//defer close(done)
-	defer close(procedureComplete)
+	//completedImages:= make(chan struct{})
+	produceMoreCodes := make(chan struct{}, 10)
+	done := make(chan struct{},1)
+	defer close(done)
+	defer close(produceMoreCodes)
 
 	index := createResumeCodeNumber(&fromCode)
 
-	codes:=produceCodes(procedureComplete,index)
+	codes := produceCodes(done, produceMoreCodes, index, iterations)
 
-	numCodes:=0
+	numCodes := 0
+	malakiesTouTolh:=0
 	for code := range codes {
-		fmt.Printf("CODE%d: %s\n",numCodes,code)
-		numCodes++
-		if numCodes >19 {
-			procedureComplete <- true
+		//assume http call failure!
+		//httpcall()
+		//if err
+		malakiesTouTolh++
+		fmt.Printf("CODE%d: %s\n", numCodes, code)
+		if malakiesTouTolh % 10 ==0 {
+			produceMoreCodes <- struct{}{}
+			continue
 		}
+		// if numCodes%4 == 0 {
+		// 	produceMoreCodes <- struct{}{}
+		// 	//numCodes--
+		// 	continue
+		// }
+		//time.Sleep(1 * time.Second)
+
+		numCodes++
+		if numCodes >= iterations {
+			done<- struct{}{}
+			break
+		}
+
 	}
 	return nil
 }
 
-// produceCodes feeds 
-func produceCodes(done <-chan bool,index customNumber.Number) <-chan string {
-	codes:= make(chan string,10)
-	//keep producing codes until 
+// produceCodes feeds
+func produceCodes(done <-chan struct{}, produceMoreCodes <-chan struct{}, index customNumber.Number, iterations int) <-chan string {
+	codes := make(chan string, 10)
+	completedCodes := 0
+
 	go func() {
+		defer close(codes)
 		for {
-			time.Sleep(10 * time.Millisecond)
-			runtime.Gosched()
 			select {
+			case <-produceMoreCodes:
+				completedCodes--
 			case <-done:
-				fmt.Println("CLOSED")
-				close(codes)
 				return
-			case codes <- index.SmartString():
-				fmt.Printf("Producing code: %s\n",index.SmartString())
-				index.Increment()	
+			default:
+			}
+			if completedCodes < iterations {
+				fmt.Printf("PRODUCING CODE: %s \n",index.SmartString())
+				codes <- index.SmartString()
+				index.Increment()
+				completedCodes++
 			}
 		}
 	}()
 	return codes
 }
+
+// // produceCodes feeds
+// func produceCodes(done <-chan struct{},index customNumber.Number) (<-chan string) {
+// 	codes:= make(chan string,2)
+// 	//keep producing codes until
+// 	go func() {
+// 		defer close(codes)
+// 		for {
+// 			//time.Sleep(10 * time.Millisecond)
+// 			runtime.Gosched()
+// 			select {
+// 			case <-done:
+// 				fmt.Println("CLOSED")
+// 				return
+// 			default:
+// 			}
+// 			select {
+// 			case <-done:
+// 				fmt.Println("CLOSED")
+// 				return
+// 			case codes <- index.SmartString():
+// 				fmt.Printf("Producing code: %s\n",index.SmartString())
+// 				index.Increment()
+// 			}
+// 		}
+// 	}()
+// 	return codes
+// }
 
 // // StartCommand is what happens when the command is executed.
 // func (cm CommandManager) StartCommand(fromCode string, iterations int) error {
