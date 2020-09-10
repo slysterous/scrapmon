@@ -5,6 +5,7 @@ import (
 	customNumber "github.com/slysterous/print-scrape/pkg/customnumber"
 	"strings"
 	"time"
+	"runtime"
 )
 
 // CustomNumberDigitValues defines the allowed digits of the custom arithmetic system to be used
@@ -119,10 +120,11 @@ func IsScreenShotURLValid(url string) bool {
 }
 
 // StartCommand is what happens when the command is executed.
-func (cm CommandManager) StartCommand(fromCode string, iterations int) error {
+func (cm CommandManager) StartCommand (fromCode string,iterations int) error {
+	//start:=time.Now()
 
-	imageCount:= 0
-
+	//imageCount:= 0
+	
 	//if no code was provided, then we resume from the last created code or from the beginning.
 	if fromCode == "" {
 		lastCode, err := cm.Storage.Dm.GetLatestCreatedScreenShotCode()
@@ -135,85 +137,150 @@ func (cm CommandManager) StartCommand(fromCode string, iterations int) error {
 			fromCode = *lastCode
 		}
 	}
+	procedureComplete:= make(chan bool)
+	//done := make(chan bool)
+	//defer close(done)
+	defer close(procedureComplete)
 
 	index := createResumeCodeNumber(&fromCode)
 
-	//iterate untill we reach the last possible image or run out of iterations.
-	for index.String() != "ZZZZZZZZ" && ((imageCount < iterations) || iterations==-1) {
-		fmt.Printf("ITERATIONS LEFT: %v \n", iterations - imageCount)
+	codes:=produceCodes(procedureComplete,index)
 
-		existsAlready, err := cm.Storage.Dm.CodeAlreadyExists(index.SmartString())
-		if err != nil {
-			return fmt.Errorf("could not get image, err: %v", err)
+	numCodes:=0
+	for code := range codes {
+		fmt.Printf("CODE%d: %s\n",numCodes,code)
+		numCodes++
+		if numCodes >19 {
+			procedureComplete <- true
 		}
-
-		if existsAlready {
-			index.Increment()
-			continue
-		}
-
-		screenShot := ScreenShot{
-			CodeCreatedAt: time.Now(),
-			RefCode:       index.SmartString(),
-			FileURI:       "",
-		}
-
-		// start saving item to db with downloadStatus pending
-		_, err = cm.Storage.Dm.CreateScreenShot(screenShot)
-		if err != nil {
-			return fmt.Errorf("could not save screenshot, err: %v", err)
-		}
-
-		// download image
-		imagedata, imageType, err := cm.Scrapper.ScrapeImageByCode(screenShot.RefCode)
-		if err != nil {
-			fmt.Printf("could not download image stream, err: %v", err)
-			err = cm.Storage.Dm.UpdateScreenShotStatusByCode(screenShot.RefCode, StatusFailure)
-			if err != nil {
-				return fmt.Errorf("could not update screenshot status to Failure, err: %v", err)
-			}
-
-			index.Increment()
-			continue
-		}
-
-		if imagedata == nil {
-			err = cm.Storage.Dm.UpdateScreenShotStatusByCode(screenShot.RefCode, StatusFailure)
-			if err != nil {
-				return fmt.Errorf("could not update screenshot status to Failure, err: %v", err)
-			}
-			index.Increment()
-			continue
-		}
-
-		err = cm.Storage.Dm.UpdateScreenShotStatusByCode(screenShot.RefCode, StatusOngoing)
-		if err != nil {
-			return fmt.Errorf("could not update screenshot status to ongoing, err: %v", err)
-		}
-
-		fileURI := "/media/slysterous/HDD Vault/imgur-images/" + screenShot.RefCode + "." + *imageType
-
-		err = cm.Storage.Fm.SaveFile(imagedata, fileURI)
-		if err != nil {
-			return fmt.Errorf("could not save image to filesystem, err: %v", err)
-		}
-
-		screenShot.FileURI = fileURI
-
-		screenShot.Status = StatusSuccess
-
-		fmt.Printf("screenshot: %v", screenShot)
-		err = cm.Storage.Dm.UpdateScreenShotByCode(screenShot)
-
-		index.Increment()
-		imageCount++
-		// Code to measure
-		// duration := time.Since(start)
-		// // Formatted string, such as "2h3m0.5s" or "4.503μs"
-		// log.Println(duration)
 	}
 	return nil
 }
+
+// produceCodes feeds 
+func produceCodes(done <-chan bool,index customNumber.Number) <-chan string {
+	codes:= make(chan string,10)
+	//keep producing codes until 
+	go func() {
+		for {
+			time.Sleep(10 * time.Millisecond)
+			runtime.Gosched()
+			select {
+			case <-done:
+				fmt.Println("CLOSED")
+				close(codes)
+				return
+			case codes <- index.SmartString():
+				fmt.Printf("Producing code: %s\n",index.SmartString())
+				index.Increment()	
+			}
+		}
+	}()
+	return codes
+}
+
+// // StartCommand is what happens when the command is executed.
+// func (cm CommandManager) StartCommand(fromCode string, iterations int) error {
+
+// 	start:=time.Now()
+
+// 	imageCount:= 0
+
+// 	//if no code was provided, then we resume from the last created code or from the beginning.
+// 	if fromCode == "" {
+// 		lastCode, err := cm.Storage.Dm.GetLatestCreatedScreenShotCode()
+// 		if err != nil {
+// 			return fmt.Errorf("could not get latest image code, err: %v", err)
+// 		}
+// 		if lastCode == nil {
+// 			fromCode = "0"
+// 		} else {
+// 			fromCode = *lastCode
+// 		}
+// 	}
+
+// 	index := createResumeCodeNumber(&fromCode)
+
+// 	//iterate untill we reach the last possible image or run out of iterations.
+// 	for index.String() != "ZZZZZZZZ" && ((imageCount < iterations) || iterations==-1) {
+// 		fmt.Printf("ITERATIONS LEFT: %v \n", iterations - imageCount)
+
+// 		existsAlready, err := cm.Storage.Dm.CodeAlreadyExists(index.SmartString())
+// 		if err != nil {
+// 			return fmt.Errorf("could not get image, err: %v", err)
+// 		}
+
+// 		if existsAlready {
+// 			index.Increment()
+// 			continue
+// 		}
+
+// 		screenShot := ScreenShot{
+// 			CodeCreatedAt: time.Now(),
+// 			RefCode:       index.SmartString(),
+// 			FileURI:       "",
+// 		}
+
+// 		// start saving item to db with downloadStatus pending
+// 		_, err = cm.Storage.Dm.CreateScreenShot(screenShot)
+// 		if err != nil {
+// 			return fmt.Errorf("could not save screenshot, err: %v", err)
+// 		}
+
+// 		// download image
+// 		imageTime:=time.Now()
+// 		imagedata, imageType, err := cm.Scrapper.ScrapeImageByCode(screenShot.RefCode)
+// 		if err != nil {
+// 			fmt.Printf("could not download image stream, err: %v", err)
+// 			err = cm.Storage.Dm.UpdateScreenShotStatusByCode(screenShot.RefCode, StatusFailure)
+// 			if err != nil {
+// 				return fmt.Errorf("could not update screenshot status to Failure, err: %v", err)
+// 			}
+
+// 			index.Increment()
+// 			continue
+// 		}
+
+// 		if imagedata == nil {
+// 			err = cm.Storage.Dm.UpdateScreenShotStatusByCode(screenShot.RefCode, StatusFailure)
+// 			if err != nil {
+// 				return fmt.Errorf("could not update screenshot status to Failure, err: %v", err)
+// 			}
+// 			index.Increment()
+// 			continue
+// 		}
+
+// 		err = cm.Storage.Dm.UpdateScreenShotStatusByCode(screenShot.RefCode, StatusOngoing)
+// 		if err != nil {
+// 			return fmt.Errorf("could not update screenshot status to ongoing, err: %v", err)
+// 		}
+
+// 		fileURI := "/media/slysterous/HDD Vault/imgur-images/" + screenShot.RefCode + "." + *imageType
+
+// 		err = cm.Storage.Fm.SaveFile(imagedata, fileURI)
+// 		if err != nil {
+// 			return fmt.Errorf("could not save image to filesystem, err: %v", err)
+// 		}
+
+// 		screenShot.FileURI = fileURI
+
+// 		screenShot.Status = StatusSuccess
+
+// 		err = cm.Storage.Dm.UpdateScreenShotByCode(screenShot)
+
+// 		index.Increment()
+// 		imageCount++
+// 		// Code to measure
+// 		duration := time.Since(imageTime)
+// 		// // Formatted string, such as "2h3m0.5s" or "4.503μs"
+// 		fmt.Printf("DURATION: %s ",duration)
+// 	}
+// 		// Code to measure
+// 		duration := time.Since(start)
+// 		// // Formatted string, such as "2h3m0.5s" or "4.503μs"
+// 		fmt.Printf("Total Duration: %s ",duration)
+// 	return nil
+// }
 
 // PurgeCommand is what happens when the command is executed.
 func (cm CommandManager) PurgeCommand() error {

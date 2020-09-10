@@ -129,7 +129,7 @@ func (c Client) ScrapeImageByCode(code string) (*[]byte, *string, error) {
 	// 	return nil,fmt.Errorf("http: invalid screenshot url detected")
 	// }
 
-	log.Printf("URL: %s", url)
+	fmt.Printf("URL: %s ", url)
 
 	//Get the response bytes from the url
 	response, err := c.httpClient.Get(url)
@@ -139,10 +139,10 @@ func (c Client) ScrapeImageByCode(code string) (*[]byte, *string, error) {
 
 	defer response.Body.Close()
 
-	log.Printf("STATUS: %d", response.StatusCode)
+	fmt.Printf("STATUS: %d ", response.StatusCode)
 
 	if response.StatusCode == 404 || response.StatusCode == 302 {
-		log.Printf("NOT FOUND! STATUS: %d", response.StatusCode)
+		fmt.Printf("NOT FOUND! STATUS: %d ", response.StatusCode)
 		return nil, nil, nil
 	}
 
