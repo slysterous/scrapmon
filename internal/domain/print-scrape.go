@@ -167,6 +167,7 @@ func (cm CommandManager) StartCommand(fromCode string, iterations int) error {
 
 		numCodes++
 		if numCodes >= iterations {
+
 			done<- struct{}{}
 			break
 		}
