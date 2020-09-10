@@ -31,7 +31,7 @@ func main() {
 	scrapper := phttp.NewProxyChainClient("127.0.0.1", "9050")
 
 	commandManager := printscrape.CommandManager{
-		Storage:        storage,
+		Storage:  storage,
 		Scrapper: scrapper,
 	}
 

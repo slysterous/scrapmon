@@ -121,11 +121,13 @@ func IsScreenShotURLValid(url string) bool {
 // StartCommand is what happens when the command is executed.
 func (cm CommandManager) StartCommand(fromCode string, iterations int) error {
 
+	imageCount:= 0
+
 	//if no code was provided, then we resume from the last created code or from the beginning.
 	if fromCode == "" {
 		lastCode, err := cm.Storage.Dm.GetLatestCreatedScreenShotCode()
 		if err != nil {
-			return fmt.Errorf("could not get latest prnt.sc code, err: %v", err)
+			return fmt.Errorf("could not get latest image code, err: %v", err)
 		}
 		if lastCode == nil {
 			fromCode = "0"
@@ -137,8 +139,8 @@ func (cm CommandManager) StartCommand(fromCode string, iterations int) error {
 	index := createResumeCodeNumber(&fromCode)
 
 	//iterate untill we reach the last possible image or run out of iterations.
-	for index.String() != "ZZZZZZZZ" && iterations > 0 {
-		fmt.Printf("ITERATIONS LEFT: %v \n", iterations)
+	for index.String() != "ZZZZZZZZ" && ((imageCount < iterations) || iterations==-1) {
+		fmt.Printf("ITERATIONS LEFT: %v \n", iterations - imageCount)
 
 		existsAlready, err := cm.Storage.Dm.CodeAlreadyExists(index.SmartString())
 		if err != nil {
@@ -146,7 +148,6 @@ func (cm CommandManager) StartCommand(fromCode string, iterations int) error {
 		}
 
 		if existsAlready {
-			iterations--
 			index.Increment()
 			continue
 		}
@@ -163,6 +164,7 @@ func (cm CommandManager) StartCommand(fromCode string, iterations int) error {
 			return fmt.Errorf("could not save screenshot, err: %v", err)
 		}
 
+		// download image
 		imagedata, imageType, err := cm.Scrapper.ScrapeImageByCode(screenShot.RefCode)
 		if err != nil {
 			fmt.Printf("could not download image stream, err: %v", err)
@@ -172,7 +174,6 @@ func (cm CommandManager) StartCommand(fromCode string, iterations int) error {
 			}
 
 			index.Increment()
-			iterations--
 			continue
 		}
 
@@ -182,7 +183,6 @@ func (cm CommandManager) StartCommand(fromCode string, iterations int) error {
 				return fmt.Errorf("could not update screenshot status to Failure, err: %v", err)
 			}
 			index.Increment()
-			iterations--
 			continue
 		}
 
@@ -206,7 +206,7 @@ func (cm CommandManager) StartCommand(fromCode string, iterations int) error {
 		err = cm.Storage.Dm.UpdateScreenShotByCode(screenShot)
 
 		index.Increment()
-		iterations--
+		imageCount++
 		// Code to measure
 		// duration := time.Since(start)
 		// // Formatted string, such as "2h3m0.5s" or "4.503μs"

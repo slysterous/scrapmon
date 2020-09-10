@@ -104,10 +104,9 @@ func (c *Client) CodeAlreadyExists(code string) (bool, error) {
 	}
 	row := c.DB.QueryRow(`
 		SELECT
-		fileURI
+		id
 		FROM ScreenShots
 		WHERE refCode=$1
-		AND fileURI!=null
 	
 	`, code)
 
