@@ -110,7 +110,7 @@ func (c Client) scrapeScreenShotURLByCode(code string) (*string, error) {
 	return &screenShotURL, nil
 }
 
-// ScrapeImageByCode fetches an prnt.sc image stream.
+// ScrapeImageByCode fetches an prnt.sc image stream an image type and an error.
 func (c Client) ScrapeImageByCode(code string) (*[]byte, *string, error) {
 
 	url := "https://i.imgur.com/" + code + ".png"

@@ -65,6 +65,11 @@ type Service struct {
 	scrapper ImageScrapper
 }
 
+type ScrapedImage struct {
+	Data []byte
+	Type string
+}
+
 // CommandFunction defines a function that contains the logic of a command.
 type CommandFunction func() error
 
@@ -90,13 +95,13 @@ type DatabaseManager interface {
 
 // FileManager defins the file management behaviour.
 type FileManager interface {
-	SaveFile(src *[]byte, path string) error
+	SaveFile(src ScrapedImage, path string) error
 	Purger
 }
 
 // ImageScrapper defines the scrapping behaviour.
 type ImageScrapper interface {
-	ScrapeImageByCode(code string) (*[]byte, *string, error)
+	ScrapeImageByCode(code string) (ScrapedImage, error)
 }
 
 // Purge will clear all data saved in files and database
@@ -136,9 +141,8 @@ func (cm CommandManager) StartCommand(fromCode string, iterations int) error {
 			fromCode = *lastCode
 		}
 	}
-	//completedImages:= make(chan struct{})
 	produceMoreCodes := make(chan struct{}, 10)
-	done := make(chan struct{},1)
+	done := make(chan struct{}, 1)
 	defer close(done)
 	defer close(produceMoreCodes)
 
@@ -146,37 +150,162 @@ func (cm CommandManager) StartCommand(fromCode string, iterations int) error {
 
 	codes := produceCodes(done, produceMoreCodes, index, iterations)
 
-	numCodes := 0
-	malakiesTouTolh:=0
-	for code := range codes {
-		//assume http call failure!
-		//httpcall()
-		//if err
-		malakiesTouTolh++
-		fmt.Printf("CODE%d: %s\n", numCodes, code)
-		if malakiesTouTolh % 10 ==0 {
-			produceMoreCodes <- struct{}{}
-			continue
-		}
-		// if numCodes%4 == 0 {
-		// 	produceMoreCodes <- struct{}{}
-		// 	//numCodes--
-		// 	continue
-		// }
-		//time.Sleep(1 * time.Second)
+	filteredCodes,_:=filterCodes(cm.Storage,done,codes,produceMoreCodes)
 
-		numCodes++
-		if numCodes >= iterations {
+	pendingImages,_:=generatePendingImages(cm.Storage,done,filteredCodes)
 
-			done<- struct{}{}
-			break
-		}
+	downloadWorkers:=make([]<-chan ScrapedImage,10)
+	downloadWorkersErrors:=make([]<-chan error,1)
 
+	for i:=0; i<10;i++{
+		downloadWorkers[i],downloadWorkersErrors[i]=downloadImages(cm.Storage,cm.Scrapper,done,pendingImages,produceMoreCodes)
 	}
+
+
+
+	// numCodes := 0
+	// malakiesTouTolh := 0
+	// for code := range codes {
+	// 	//assume http call failure!
+	// 	//httpcall()
+	// 	//if err
+	// 	malakiesTouTolh++
+	// 	fmt.Printf("CODE%d: %s\n", numCodes, code)
+	// 	if malakiesTouTolh%10 == 0 {
+	// 		produceMoreCodes <- struct{}{}
+	// 		continue
+	// 	}
+	// 	// if numCodes%4 == 0 {
+	// 	// 	produceMoreCodes <- struct{}{}
+	// 	// 	//numCodes--
+	// 	// 	continue
+	// 	// }
+	// 	//time.Sleep(1 * time.Second)
+
+	// 	numCodes++
+	// 	if numCodes >= iterations {
+
+	// 		done <- struct{}{}
+	// 		break
+	// 	}
+
+	// }
 	return nil
 }
 
-// produceCodes feeds
+func generatePendingImages(storage Storage,
+	done <-chan struct{},
+	filteredCodes <-chan string) (
+	<-chan ScreenShot,<-chan error) {
+
+	pendingImages:= make(chan ScreenShot,10)
+	errc:=make(chan error,1)
+
+	go func() {
+		defer close(pendingImages)
+		defer close(errc)
+
+		for code := range filteredCodes {
+			select {
+			case <-done:
+				return
+			default:
+
+				pendingImage:= ScreenShot{
+					RefCode:code,
+					Status: StatusPending,
+					CodeCreatedAt: time.Now(),
+				}
+				_,err:=storage.Dm.CreateScreenShot(pendingImage)
+				if err != nil {
+					// Handle an error that occurs during the goroutine.
+					errc<-err
+					return
+				}
+				pendingImages <- pendingImage
+
+			}
+		}
+	}()
+	return pendingImages,errc
+}
+	
+
+func downloadImages(storage Storage,
+	scrapper ImageScrapper,
+	done <-chan struct{},
+	pendingImages <-chan ScreenShot,
+	produceMoreCodes chan<- struct{}) (
+	<-chan ScrapedImage, <-chan error)  {
+	
+	imagesToSave:= make(chan ScrapedImage,10)
+
+	errc := make(chan error,1)
+
+	go func() {
+		defer close(imagesToSave)
+		defer close(errc)
+
+		for image :=range pendingImages {
+			select {
+			case <-done:
+				return
+			default:
+				scrapedImage,err:=scrapper.ScrapeImageByCode(image.RefCode)
+				if err != nil {
+					// Handle an error that occurs during the goroutine.
+					errc<-err
+					return
+				}
+				imagesToSave <- scrapedImage
+			
+			}
+		}
+
+	}()
+		return imagesToSave,errc
+	}
+
+
+	
+
+	func filterCodes(storage Storage,
+	done <-chan struct{},
+	codes <-chan string,
+	produceMoreCodes chan<- struct{}) (
+	<-chan string,<-chan error) {
+
+	usefulCodes := make(chan string, 10)
+	errc := make(chan error,1)
+
+	go func() {
+		defer close(usefulCodes)
+		defer close(errc)
+		
+		for code := range codes {
+			select {
+			case <-done:
+				return
+			default:
+				exists, err := storage.Dm.CodeAlreadyExists(code)
+				if err != nil {
+					// Handle an error that occurs during the goroutine.
+					errc<-err
+					return
+				}
+				if exists {
+					produceMoreCodes <- struct{}{}
+					break
+				}
+				usefulCodes <- code
+			}
+		}
+	}()
+	return usefulCodes,errc
+}
+
+
+// produceCodes generates and feeds the pipeline with codes.
 func produceCodes(done <-chan struct{}, produceMoreCodes <-chan struct{}, index customNumber.Number, iterations int) <-chan string {
 	codes := make(chan string, 10)
 	completedCodes := 0
@@ -192,7 +321,7 @@ func produceCodes(done <-chan struct{}, produceMoreCodes <-chan struct{}, index 
 			default:
 			}
 			if completedCodes < iterations {
-				fmt.Printf("PRODUCING CODE: %s \n",index.SmartString())
+				fmt.Printf("PRODUCING CODE: %s \n", index.SmartString())
 				codes <- index.SmartString()
 				index.Increment()
 				completedCodes++
