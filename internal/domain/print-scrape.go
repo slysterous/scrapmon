@@ -2,8 +2,6 @@ package domain
 
 import (
 	"fmt"
-	customNumber "github.com/slysterous/print-scrape/pkg/customnumber"
-	"strings"
 	"time"
 )
 
@@ -66,6 +64,7 @@ type Service struct {
 }
 
 type ScrapedImage struct {
+	Code string
 	Data []byte
 	Type string
 }
@@ -95,7 +94,7 @@ type DatabaseManager interface {
 
 // FileManager defins the file management behaviour.
 type FileManager interface {
-	SaveFile(src ScrapedImage, path string) error
+	SaveFile(src ScrapedImage) error
 	Purger
 }
 
@@ -115,220 +114,6 @@ func (s *Storage) Purge() error {
 		return err
 	}
 	return nil
-}
-
-// IsScreenShotURLValid checks if a screenshot url is valid to be processed.
-func IsScreenShotURLValid(url string) bool {
-	fmt.Println(url)
-	return strings.Contains(url, "https://")
-}
-
-// StartCommand is what happens when the command is executed.
-func (cm CommandManager) StartCommand(fromCode string, iterations int) error {
-	//start:=time.Now()
-
-	//imageCount:= 0
-
-	//if no code was provided, then we resume from the last created code or from the beginning.
-	if fromCode == "" {
-		lastCode, err := cm.Storage.Dm.GetLatestCreatedScreenShotCode()
-		if err != nil {
-			return fmt.Errorf("could not get latest image code, err: %v", err)
-		}
-		if lastCode == nil {
-			fromCode = "0"
-		} else {
-			fromCode = *lastCode
-		}
-	}
-	produceMoreCodes := make(chan struct{}, 10)
-	done := make(chan struct{}, 1)
-	defer close(done)
-	defer close(produceMoreCodes)
-
-	index := createResumeCodeNumber(&fromCode)
-
-	codes := produceCodes(done, produceMoreCodes, index, iterations)
-
-	filteredCodes,_:=filterCodes(cm.Storage,done,codes,produceMoreCodes)
-
-	pendingImages,_:=generatePendingImages(cm.Storage,done,filteredCodes)
-
-	downloadWorkers:=make([]<-chan ScrapedImage,10)
-	downloadWorkersErrors:=make([]<-chan error,1)
-
-	for i:=0; i<10;i++{
-		downloadWorkers[i],downloadWorkersErrors[i]=downloadImages(cm.Storage,cm.Scrapper,done,pendingImages,produceMoreCodes)
-	}
-
-
-
-	// numCodes := 0
-	// malakiesTouTolh := 0
-	// for code := range codes {
-	// 	//assume http call failure!
-	// 	//httpcall()
-	// 	//if err
-	// 	malakiesTouTolh++
-	// 	fmt.Printf("CODE%d: %s\n", numCodes, code)
-	// 	if malakiesTouTolh%10 == 0 {
-	// 		produceMoreCodes <- struct{}{}
-	// 		continue
-	// 	}
-	// 	// if numCodes%4 == 0 {
-	// 	// 	produceMoreCodes <- struct{}{}
-	// 	// 	//numCodes--
-	// 	// 	continue
-	// 	// }
-	// 	//time.Sleep(1 * time.Second)
-
-	// 	numCodes++
-	// 	if numCodes >= iterations {
-
-	// 		done <- struct{}{}
-	// 		break
-	// 	}
-
-	// }
-	return nil
-}
-
-func generatePendingImages(storage Storage,
-	done <-chan struct{},
-	filteredCodes <-chan string) (
-	<-chan ScreenShot,<-chan error) {
-
-	pendingImages:= make(chan ScreenShot,10)
-	errc:=make(chan error,1)
-
-	go func() {
-		defer close(pendingImages)
-		defer close(errc)
-
-		for code := range filteredCodes {
-			select {
-			case <-done:
-				return
-			default:
-
-				pendingImage:= ScreenShot{
-					RefCode:code,
-					Status: StatusPending,
-					CodeCreatedAt: time.Now(),
-				}
-				_,err:=storage.Dm.CreateScreenShot(pendingImage)
-				if err != nil {
-					// Handle an error that occurs during the goroutine.
-					errc<-err
-					return
-				}
-				pendingImages <- pendingImage
-
-			}
-		}
-	}()
-	return pendingImages,errc
-}
-	
-
-func downloadImages(storage Storage,
-	scrapper ImageScrapper,
-	done <-chan struct{},
-	pendingImages <-chan ScreenShot,
-	produceMoreCodes chan<- struct{}) (
-	<-chan ScrapedImage, <-chan error)  {
-	
-	imagesToSave:= make(chan ScrapedImage,10)
-
-	errc := make(chan error,1)
-
-	go func() {
-		defer close(imagesToSave)
-		defer close(errc)
-
-		for image :=range pendingImages {
-			select {
-			case <-done:
-				return
-			default:
-				scrapedImage,err:=scrapper.ScrapeImageByCode(image.RefCode)
-				if err != nil {
-					// Handle an error that occurs during the goroutine.
-					errc<-err
-					return
-				}
-				imagesToSave <- scrapedImage
-			
-			}
-		}
-
-	}()
-		return imagesToSave,errc
-	}
-
-
-	
-
-	func filterCodes(storage Storage,
-	done <-chan struct{},
-	codes <-chan string,
-	produceMoreCodes chan<- struct{}) (
-	<-chan string,<-chan error) {
-
-	usefulCodes := make(chan string, 10)
-	errc := make(chan error,1)
-
-	go func() {
-		defer close(usefulCodes)
-		defer close(errc)
-		
-		for code := range codes {
-			select {
-			case <-done:
-				return
-			default:
-				exists, err := storage.Dm.CodeAlreadyExists(code)
-				if err != nil {
-					// Handle an error that occurs during the goroutine.
-					errc<-err
-					return
-				}
-				if exists {
-					produceMoreCodes <- struct{}{}
-					break
-				}
-				usefulCodes <- code
-			}
-		}
-	}()
-	return usefulCodes,errc
-}
-
-
-// produceCodes generates and feeds the pipeline with codes.
-func produceCodes(done <-chan struct{}, produceMoreCodes <-chan struct{}, index customNumber.Number, iterations int) <-chan string {
-	codes := make(chan string, 10)
-	completedCodes := 0
-
-	go func() {
-		defer close(codes)
-		for {
-			select {
-			case <-produceMoreCodes:
-				completedCodes--
-			case <-done:
-				return
-			default:
-			}
-			if completedCodes < iterations {
-				fmt.Printf("PRODUCING CODE: %s \n", index.SmartString())
-				codes <- index.SmartString()
-				index.Increment()
-				completedCodes++
-			}
-		}
-	}()
-	return codes
 }
 
 // // produceCodes feeds
@@ -471,14 +256,4 @@ func (cm CommandManager) PurgeCommand() error {
 	return nil
 }
 
-func createResumeCodeNumber(code *string) customNumber.Number {
-	// if no code was found
-	// or if were starting from 0 then start from the beginning.
-	if code == nil || *code == "0" {
-		return customNumber.NewNumber(CustomNumberDigitValues, "0")
-	}
 
-	number := customNumber.NewNumber(CustomNumberDigitValues, *code)
-	number.Increment()
-	return number
-}

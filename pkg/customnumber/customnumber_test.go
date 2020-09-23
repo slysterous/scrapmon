@@ -15,14 +15,14 @@ func TestCustomNumberString(t *testing.T) {
 	}
 }
 
-func TestCustomNumberSmartString(t *testing.T){
-	initialValue:= "000010"
-	want:="10"
-	values:=[]rune{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'}
-	number:= customnumber.NewNumber(values,initialValue)
+func TestCustomNumberSmartString(t *testing.T) {
+	initialValue := "000010"
+	want := "10"
+	values := []rune{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'}
+	number := customnumber.NewNumber(values, initialValue)
 
-	if got, want := number.SmartString(), want;got !=want {
-		t.Errorf("Smart string of custom number, want: %s got: %s",want,got)
+	if got, want := number.SmartString(), want; got != want {
+		t.Errorf("Smart string of custom number, want: %s got: %s", want, got)
 	}
 }
 

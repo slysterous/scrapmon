@@ -17,6 +17,7 @@ require (
 	github.com/google/go-cmp v0.4.0 // indirect
 	github.com/google/uuid v1.1.1
 	github.com/gorilla/mux v1.7.4 // indirect
+	github.com/joho/godotenv v1.3.0 // indirect
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
 	github.com/lib/pq v1.3.0
 	github.com/morikuni/aec v1.0.0 // indirect

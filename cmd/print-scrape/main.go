@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"github.com/joho/godotenv"
 	cobraClient "github.com/slysterous/print-scrape/internal/cobra"
+	"github.com/slysterous/print-scrape/internal/config"
 	cfg "github.com/slysterous/print-scrape/internal/config"
 	printscrape "github.com/slysterous/print-scrape/internal/domain"
 	file "github.com/slysterous/print-scrape/internal/file"
@@ -12,13 +14,19 @@ import (
 )
 
 func main() {
+	err:=godotenv.Load()
+	if err !=nil {
+		log.Fatalf("could not load env file")
+	}
 	//init a db client.
+	config := config.FromEnv()
+
 	pgClient, err := postgres.NewClient(getDataSource(cfg.FromEnv()), cfg.FromEnv().MaxDBConnections)
 	if err != nil {
 		log.Fatalf("could not connect to DB, err: %v", err)
 	}
 	// init a file manager.
-	fileManager := file.NewManager()
+	fileManager := file.NewManager(config.ScreenShotStorageFolder)
 	if err != nil {
 		log.Fatalf("could not get a file manager: %v", err)
 	}
@@ -28,7 +36,8 @@ func main() {
 		Dm: pgClient,
 	}
 
-	scrapper := phttp.NewProxyChainClient("127.0.0.1", "9050")
+	//scrapper := phttp.NewProxyChainClient("127.0.0.1", "9050")
+	scrapper := phttp.NewClient()
 
 	commandManager := printscrape.CommandManager{
 		Storage:  storage,

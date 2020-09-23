@@ -25,7 +25,12 @@ ci:
 
 run:
 	docker-compose down
-	docker-compose -f docker-compose.yml -f docker-compose.ci.yml up -d --build
+	docker-compose up -d --build
+
+run-fast:
+	docker-compose down
+	docker-compose up -d
+
 migrate:
 	./scripts/migrate.sh
 

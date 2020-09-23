@@ -19,7 +19,7 @@ func FromEnv() printscrape.Config {
 		Env:                     getString("PRINT_SCRAPE_ENV", "dev"),
 		TorHost:                 getString("TOR_HOST", "127.0.0.1"),
 		TorPort:                 getString("TOR_PORT", "9050"),
-		ScreenShotStorageFolder: getString("PRINT_SCRAPE_ScreenShot_STORAGE_FOLDER", "./"),
+		ScreenShotStorageFolder: getString("PRINT_SCRAPE_IMAGE_FOLDER", "./"),
 	}
 }
 

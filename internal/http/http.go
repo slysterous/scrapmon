@@ -3,6 +3,7 @@ package http
 import (
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
+	"github.com/slysterous/print-scrape/internal/domain"
 	"strings"
 	//	printscrape "github.com/slysterous/print-scrape/internal/domain"
 	"io"
@@ -111,30 +112,17 @@ func (c Client) scrapeScreenShotURLByCode(code string) (*string, error) {
 }
 
 // ScrapeImageByCode fetches an prnt.sc image stream an image type and an error.
-func (c Client) ScrapeImageByCode(code string) (*[]byte, *string, error) {
+func (c Client) ScrapeImageByCode(code string) (domain.ScrapedImage, error) {
 
 	url := "https://i.imgur.com/" + code + ".png"
 
-	//url:="https://www.ipqualityscore.com/tor-ip-address-check"
-	// url,err:=c.scrapeScreenShotURLByCode(code)
-	// if err!=nil {
-	// 	return nil,err
-	// }
-
-	// if url==nil {
-	// 	return nil,fmt.Errorf("http: could not find a screenshot url")
-	// }
-
-	// if !printscrape.IsScreenShotURLValid(*url){
-	// 	return nil,fmt.Errorf("http: invalid screenshot url detected")
-	// }
-
-	fmt.Printf("URL: %s ", url)
+	fmt.Printf("URL: %s \n", url)
 
 	//Get the response bytes from the url
 	response, err := c.httpClient.Get(url)
 	if err != nil {
-		return nil, nil, fmt.Errorf("http: could not download image stream for url: %s, error %v", url, err)
+		fmt.Printf("http: could not download image stream for url: %s, error %v \n", url, err)
+		return domain.ScrapedImage{}, fmt.Errorf("http: could not download image stream for url: %s, error %v", url, err)
 	}
 
 	defer response.Body.Close()
@@ -143,7 +131,7 @@ func (c Client) ScrapeImageByCode(code string) (*[]byte, *string, error) {
 
 	if response.StatusCode == 404 || response.StatusCode == 302 {
 		fmt.Printf("NOT FOUND! STATUS: %d ", response.StatusCode)
-		return nil, nil, nil
+		return domain.ScrapedImage{}, nil
 	}
 
 	contents, err := ioutil.ReadAll(response.Body)
@@ -152,13 +140,18 @@ func (c Client) ScrapeImageByCode(code string) (*[]byte, *string, error) {
 	//fmt.Printf("RESPONSE: %v",bodyString)
 
 	if err != nil {
-		return nil, nil, fmt.Errorf("http: could not extract data from imagestream, err: %v", err)
+		fmt.Printf("ERROR2 \n")
+		return domain.ScrapedImage{}, fmt.Errorf("http: could not extract data from imagestream, err: %v", err)
 	}
 
 	contentType := response.Header.Get("Content-Type")
 	imageType := strings.TrimLeft(contentType, "image/")
-
-	return &contents, &imageType, nil
+	scrapedImage := domain.ScrapedImage{
+		Data: contents,
+		Type: imageType,
+		Code: code,
+	}
+	return scrapedImage, nil
 }
 
 // // GetImageUrlByCode fetches a ScreenShot's actual img url from a code.
