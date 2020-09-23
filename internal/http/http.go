@@ -24,6 +24,9 @@ func NewClient() *Client {
 
 	httpClient := &http.Client{
 		Transport: &http.Transport{},
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
 	}
 
 	var err error
@@ -127,12 +130,14 @@ func (c Client) ScrapeImageByCode(code string) (domain.ScrapedImage, error) {
 
 	defer response.Body.Close()
 
-	fmt.Printf("STATUS: %d ", response.StatusCode)
+	
 
 	if response.StatusCode == 404 || response.StatusCode == 302 {
-		fmt.Printf("NOT FOUND! STATUS: %d ", response.StatusCode)
+		fmt.Printf("NOT FOUND! STATUS: %d \n", response.StatusCode)
 		return domain.ScrapedImage{}, nil
 	}
+	
+	fmt.Printf("STATUS: %d \n", response.StatusCode)
 
 	contents, err := ioutil.ReadAll(response.Body)
 

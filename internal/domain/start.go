@@ -26,23 +26,25 @@ func (cm CommandManager) StartCommand(fromCode string, iterations int) error {
 		}
 	}
 
-	produceMoreCodes := make(chan struct{}, 10)
 	ctx, cancelFunc := context.WithCancel(context.Background())
 	defer cancelFunc()
 
 	var errcList []<-chan error
-	defer close(produceMoreCodes)
 
 	index := createResumeCodeNumber(&fromCode)
 
 	fmt.Printf("Starting from Code: %s\n",index.SmartString())
+	
 	//concurrency starts here
-	codes := produceCodes(ctx, produceMoreCodes, index, iterations)
+	//this will produce codes until we reach the iterations or until ctx.done is called.
+	codes,produceMoreCodes,completedCodes := produceCodes(ctx, index, iterations)
 
-	filteredCodes, filterErrors := filterCodes(cm.Storage, ctx, codes, produceMoreCodes)
+
+	// filter out codes if they already exist in the DB.
+	filteredCodes, filterErrors := filterCodes(ctx, cm.Storage, codes, produceMoreCodes)
 	errcList = append(errcList, filterErrors)
 
-	pendingImages, pendingErrors := generatePendingImages(cm.Storage, ctx, filteredCodes)
+	pendingImages, pendingErrors := generatePendingImages( ctx,cm.Storage,filteredCodes)
 	errcList = append(errcList, pendingErrors)
 
 	downloadWorkers := make([]<-chan ScrapedImage, 10)
@@ -50,7 +52,7 @@ func (cm CommandManager) StartCommand(fromCode string, iterations int) error {
 
 	for i := 0; i < 10; i++ {
 		fmt.Printf("INITIALIZING DOWNLOAD WORKER %d/10 \n", i+1)
-		downloadWorkers[i], downloadWorkerErrors = downloadImages(cm.Storage, cm.Scrapper, ctx, pendingImages, produceMoreCodes)
+		downloadWorkers[i], downloadWorkerErrors = downloadImages(ctx, cm.Storage, cm.Scrapper, pendingImages, produceMoreCodes)
 		errcList = append(errcList, downloadWorkerErrors)
 	}
 
@@ -66,6 +68,8 @@ func (cm CommandManager) StartCommand(fromCode string, iterations int) error {
 
 	downloadCount := 0
 	for range mergeSaves(ctx, saveWorkers...) {
+	
+		completedCodes <- struct{}{}
 		downloadCount++
 		fmt.Printf("DOWNLOADED AN IMAGE, TOTAL: %d\n", downloadCount)
 		if downloadCount>=10{
@@ -132,49 +136,55 @@ func mergeErrors(cs ...<-chan error) <-chan error {
 // produceCodes generates and feeds the pipeline with codes.
 func produceCodes(
 	ctx context.Context,
-	produceMoreCodes <-chan struct{},
 	index customNumber.Number,
 	iterations int,
-) <-chan string {
+) (<-chan string,chan struct{},chan struct{}) {
+	produceMoreCodes:=make(chan struct{},10)
+	completedCodes:=make(chan struct{},10)
 	codes := make(chan string, 10)
-	completedCodes := 0
-	fmt.Printf("PODUCING CODES")
+	iterationsCounter := 0
+	fmt.Printf("PRODUCING CODES")
 	go func() {
 		defer close(codes)
+		defer close(produceMoreCodes)
+		defer close(completedCodes)
+
 		for {
+			
 			select {
 			case <-produceMoreCodes:
-				completedCodes--
+				iterationsCounter--
+			case <-completedCodes:
+				iterationsCounter++
 			case <-ctx.Done():
 				fmt.Printf("CONTEXT DONE on produce codes")
 				return
-			default:
-			}
-			if completedCodes < iterations {
-				fmt.Printf("PRODUCING CODE: %s \n", index.SmartString())
-				codes <- index.SmartString()
-				index.Increment()
-				completedCodes++
-			}else{
-				return
+			case codes <- index.SmartString():
+				if iterationsCounter < iterations {
+					fmt.Printf("PRODUCING CODE: %s \n", index.SmartString())
+					
+					index.Increment()
+				}else{
+					return
+				}
 			}
 		}
 	}()
-	return codes
+	return codes,produceMoreCodes,completedCodes
 }
 
 func filterCodes(
-	storage Storage,
 	ctx context.Context,
+	storage Storage,
 	codes <-chan string,
 	produceMoreCodes chan<- struct{},
 ) (<-chan string, <-chan error) {
 
-	usefulCodes := make(chan string, 10)
+	filteredCodes := make(chan string, 10)
 	errc := make(chan error, 1)
 
 	go func() {
-		defer close(usefulCodes)
+		defer close(filteredCodes)
 		defer close(errc)
 
 		for code := range codes {
@@ -186,25 +196,25 @@ func filterCodes(
 			}
 			if exists {
 				produceMoreCodes <- struct{}{}
-				fmt.Printf("Image %s already exists, need another code.\n", code)
-				break
+				fmt.Printf("Image %s already exists, asking for another code.\n", code)
+				continue
 			}
 			fmt.Printf("Image %s does not exist, moving on.\n", code)
 
 			select {
-			case usefulCodes <- code:
+			case filteredCodes <- code:
 			case <-ctx.Done():
 				fmt.Printf("CONTEXT DONE")
 				return
 			}
 		}
 	}()
-	return usefulCodes, errc
+	return filteredCodes, errc
 }
 
 func generatePendingImages(
-	storage Storage,
 	ctx context.Context,
+	storage Storage,
 	filteredCodes <-chan string,
 ) (<-chan ScreenShot, <-chan error) {
 
@@ -222,12 +232,14 @@ func generatePendingImages(
 				CodeCreatedAt: time.Now(),
 			}
 			fmt.Printf("Creating an entry on DB for: %s\n", code)
+			
 			_, err := storage.Dm.CreateScreenShot(pendingImage)
 			if err != nil {
 				// Handle an error that occurs during the goroutine.
 				errc <- err
 				return
 			}
+
 			select {
 			case pendingImages <- pendingImage:
 			case <-ctx.Done():
@@ -240,9 +252,9 @@ func generatePendingImages(
 }
 
 func downloadImages(
+	ctx context.Context,
 	storage Storage,
 	scrapper ImageScrapper,
-	ctx context.Context,
 	pendingImages <-chan ScreenShot,
 	produceMoreCodes chan<- struct{},
 ) (<-chan ScrapedImage, <-chan error) {
@@ -252,6 +264,8 @@ func downloadImages(
 
 	go func() {
 		defer close(imagesToSave)
+		defer close(errc)
+
 		for image := range pendingImages {
 			scrapedImage, err := scrapper.ScrapeImageByCode(image.RefCode)
 			if err != nil {
@@ -261,7 +275,7 @@ func downloadImages(
 			}
 			//If the image was not found then we need a new code
 			if scrapedImage.Data == nil && err == nil {
-				fmt.Printf("Image %s was not found, requesting a new one!", image.RefCode)
+				fmt.Printf("Image %s was not found, requesting a new one! \n", image.RefCode)
 				err = storage.Dm.UpdateScreenShotStatusByCode(image.RefCode, StatusNotFound)
 				if err != nil {
 					errc <- err

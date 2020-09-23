@@ -1,7 +1,7 @@
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
-CREATE TYPE status AS ENUM ('pending', 'ongoing', 'success','failure');
+CREATE TYPE status AS ENUM ('pending', 'ongoing','notfound','success','failure');
 CREATE TABLE IF NOT EXISTS screenshots
 (
     id SERIAL PRIMARY KEY,
