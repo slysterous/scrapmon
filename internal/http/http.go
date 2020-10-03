@@ -119,7 +119,7 @@ func (c Client) ScrapeImageByCode(code string) (domain.ScrapedImage, error) {
 
 	url := "https://i.imgur.com/" + code + ".png"
 
-	fmt.Printf("URL: %s \n", url)
+	//fmt.Printf("URL: %s \n", url)
 
 	//Get the response bytes from the url
 	response, err := c.httpClient.Get(url)
@@ -130,14 +130,12 @@ func (c Client) ScrapeImageByCode(code string) (domain.ScrapedImage, error) {
 
 	defer response.Body.Close()
 
-	
-
 	if response.StatusCode == 404 || response.StatusCode == 302 {
-		fmt.Printf("NOT FOUND! STATUS: %d \n", response.StatusCode)
+		//fmt.Printf("NOT FOUND! STATUS: %d \n", response.StatusCode)
 		return domain.ScrapedImage{}, nil
 	}
-	
-	fmt.Printf("STATUS: %d \n", response.StatusCode)
+
+	//fmt.Printf("STATUS: %d \n", response.StatusCode)
 
 	contents, err := ioutil.ReadAll(response.Body)
 
@@ -145,12 +143,17 @@ func (c Client) ScrapeImageByCode(code string) (domain.ScrapedImage, error) {
 	//fmt.Printf("RESPONSE: %v",bodyString)
 
 	if err != nil {
-		fmt.Printf("ERROR2 \n")
+		//fmt.Printf("ERROR2 \n")
 		return domain.ScrapedImage{}, fmt.Errorf("http: could not extract data from imagestream, err: %v", err)
 	}
 
 	contentType := response.Header.Get("Content-Type")
 	imageType := strings.TrimLeft(contentType, "image/")
+
+	if imageType == "f" {
+		imageType = "gif"
+	}
+
 	scrapedImage := domain.ScrapedImage{
 		Data: contents,
 		Type: imageType,

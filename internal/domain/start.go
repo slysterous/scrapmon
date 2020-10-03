@@ -9,11 +9,11 @@ import (
 )
 
 // StartCommand is what happens when the command is executed.
-func (cm CommandManager) StartCommand(fromCode string, iterations int) error {
-	start:=time.Now()
+func (cm CommandManager) StartCommand(fromCode string, iterations int,workerNumber int) error {
+	// mark the start time
+	start := time.Now()
 
-	//imageCount:= 0
-	//if no code was provided, then we resume from the last created code or from the beginning.
+	// if no code was provided, then we resume from the last created code or from the beginning.
 	if fromCode == "" {
 		lastCode, err := cm.Storage.Dm.GetLatestCreatedScreenShotCode()
 		if err != nil {
@@ -26,65 +26,69 @@ func (cm CommandManager) StartCommand(fromCode string, iterations int) error {
 		}
 	}
 
-	ctx, cancelFunc := context.WithCancel(context.Background())
-	defer cancelFunc()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	var errcList []<-chan error
 
+	// create an index with the code to start from
 	index := createResumeCodeNumber(&fromCode)
 
-	fmt.Printf("Starting from Code: %s\n",index.SmartString())
-	
-	//concurrency starts here
-	//this will produce codes until we reach the iterations or until ctx.done is called.
-	codes,produceMoreCodes,completedCodes := produceCodes(ctx, index, iterations)
+	fmt.Printf("Starting from Code: %s\n", index.SmartString())
 
+	// produce codes in a channel and expose a produceMoreCodes channel to enable
+	// a feedback loop
+	codes, produceMoreCodes := produceCodes(ctx, index, iterations,workerNumber)
 
 	// filter out codes if they already exist in the DB.
-	filteredCodes, filterErrors := filterCodes(ctx, cm.Storage, codes, produceMoreCodes)
+	filteredCodes, filterErrors := filterCodes(ctx, cm.Storage, codes, produceMoreCodes,workerNumber)
 	errcList = append(errcList, filterErrors)
 
-	pendingImages, pendingErrors := generatePendingImages( ctx,cm.Storage,filteredCodes)
+	// generate image entries on db and mark them as pending
+	pendingImages, pendingErrors := generatePendingImages(ctx, cm.Storage, filteredCodes)
 	errcList = append(errcList, pendingErrors)
 
-	downloadWorkers := make([]<-chan ScrapedImage, 10)
+	// initialize an empty pool of workers
+	downloadWorkers := make([]<-chan ScrapedImage, workerNumber)
 	downloadWorkerErrors := make(<-chan error, 1)
 
-	for i := 0; i < 10; i++ {
-		fmt.Printf("INITIALIZING DOWNLOAD WORKER %d/10 \n", i+1)
+	// start workers
+	for i := 0; i < workerNumber; i++ {
 		downloadWorkers[i], downloadWorkerErrors = downloadImages(ctx, cm.Storage, cm.Scrapper, pendingImages, produceMoreCodes)
 		errcList = append(errcList, downloadWorkerErrors)
 	}
 
+	// fan-in download workers
 	downloadedImages := mergeDownloads(ctx, downloadWorkers...)
 
-	saveWorkers := make([]<-chan ScreenShot, 10)
+	// initialize an empty pool of workers
+	saveWorkers := make([]<-chan ScreenShot, workerNumber)
 	saveWorkersErrors := make(<-chan error, 1)
 
-	for i := 0; i < 10; i++ {
+	// start workers
+	for i := 0; i < workerNumber; i++ {
 		saveWorkers[i], saveWorkersErrors = saveImages(cm.Storage, ctx, downloadedImages)
 		errcList = append(errcList, saveWorkersErrors)
 	}
 
 	downloadCount := 0
 	for range mergeSaves(ctx, saveWorkers...) {
-	
-		completedCodes <- struct{}{}
+
 		downloadCount++
 		fmt.Printf("DOWNLOADED AN IMAGE, TOTAL: %d\n", downloadCount)
-		if downloadCount>=10{
-			fmt.Printf("WE SHOULD FINISH NOW!")
+		if downloadCount >= iterations {
+			fmt.Printf("WE SHOULD FINISH NOW!\n")
 			//we dont need more codes
-
+			cancel()
 			break
 
 		}
 	}
-	result:=waitForPipeline(errcList...)
+	result := waitForPipeline(errcList...)
 	duration := time.Since(start)
 	// 		// // Formatted string, such as "2h3m0.5s" or "4.503μs"
 	// 		fmt.Printf("Total Duration: %s ",duration)
-	fmt.Printf("OPERATION COMPLETED: TIME SPENT: %s",duration)
+	fmt.Printf("OPERATION COMPLETED: TIME SPENT: %s\n", duration)
 	return result
 }
 
@@ -138,39 +142,45 @@ func produceCodes(
 	ctx context.Context,
 	index customNumber.Number,
 	iterations int,
-) (<-chan string,chan struct{},chan struct{}) {
-	produceMoreCodes:=make(chan struct{},10)
-	completedCodes:=make(chan struct{},10)
-	codes := make(chan string, 10)
+	channelSize int,
+) (<-chan string, chan struct{}) {
+	produceMoreCodes := make(chan struct{}, iterations+1)
+	codes := make(chan string, iterations+1)
 	iterationsCounter := 0
 	fmt.Printf("PRODUCING CODES")
 	go func() {
 		defer close(codes)
 		defer close(produceMoreCodes)
-		defer close(completedCodes)
 
 		for {
+			if iterationsCounter < iterations {
+				produceMoreCodes <- struct{}{}
+				iterationsCounter++
+			}
+			fmt.Println("IM HERE")
 			
 			select {
 			case <-produceMoreCodes:
-				iterationsCounter--
-			case <-completedCodes:
-				iterationsCounter++
+				fmt.Printf("iterationsCounter: %d  iterations: %d\n", iterationsCounter, iterations)
+				//fmt.Printf("PRODUCING CODE: %s \n", index.SmartString())
+			codesFor:	
+			for{
+				select{
+				case codes <- index.SmartString():
+					index.Increment()
+					break codesFor
+				case <-time.After(1 * time.Second):
+					fmt.Println("DEADLOCK TIMEOUT PRODUCE CODES")
+					break 
+				}
+			}
 			case <-ctx.Done():
 				fmt.Printf("CONTEXT DONE on produce codes")
 				return
-			case codes <- index.SmartString():
-				if iterationsCounter < iterations {
-					fmt.Printf("PRODUCING CODE: %s \n", index.SmartString())
-					
-					index.Increment()
-				}else{
-					return
-				}
 			}
 		}
 	}()
-	return codes,produceMoreCodes,completedCodes
+	return codes, produceMoreCodes
 }
 
 func filterCodes(
@@ -178,9 +188,10 @@ func filterCodes(
 	storage Storage,
 	codes <-chan string,
 	produceMoreCodes chan<- struct{},
+	channelSize int,
 ) (<-chan string, <-chan error) {
 
-	filteredCodes := make(chan string, 10)
+	filteredCodes := make(chan string, channelSize)
 	errc := make(chan error, 1)
 
 	go func() {
@@ -195,11 +206,21 @@ func filterCodes(
 				return
 			}
 			if exists {
-				produceMoreCodes <- struct{}{}
+			
+				for1:
+				for{
+					select{
+					case produceMoreCodes <- struct{}{}:
+						break for1
+					case <-time.After(1 * time.Second):
+						fmt.Println("DEADLOCK TIMEOUT PRODUCE MORE CODES")
+						break
+					}
+				}
 				fmt.Printf("Image %s already exists, asking for another code.\n", code)
 				continue
 			}
-			fmt.Printf("Image %s does not exist, moving on.\n", code)
+			fmt.Printf("Image %s does not exist, image will be downloaded.\n", code)
 
 			select {
 			case filteredCodes <- code:
@@ -232,7 +253,7 @@ func generatePendingImages(
 				CodeCreatedAt: time.Now(),
 			}
 			fmt.Printf("Creating an entry on DB for: %s\n", code)
-			
+
 			_, err := storage.Dm.CreateScreenShot(pendingImage)
 			if err != nil {
 				// Handle an error that occurs during the goroutine.

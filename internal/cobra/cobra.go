@@ -60,13 +60,19 @@ func (c Client) RegisterStartCommand() {
 			if err != nil {
 				return fmt.Errorf("command validation error, err: %v", err)
 			}
-			return c.commandManager.StartCommand(from, iterations)
+
+			workersNumber, err := handleWorkersNumberParam(cmd)
+			if err !=nil {
+				return fmt.Errorf("command validation error, err: %v",err)
+			}
+			return c.commandManager.StartCommand(from, iterations,workersNumber)
 		},
 		SilenceErrors: true,
 	}
 	startCommand.Flags().StringP("from", "f", "", "starting imgur image code")
 	startCommand.Flags().StringP("iterations", "i", "", "how many images should be downloaded")
-
+	startCommand.Flags().StringP("workers","w","","the amount of workers to be utilized for async operations")
+	startCommand.MarkFlagRequired("workers")
 	c.rootCmd.AddCommand(startCommand)
 }
 
@@ -109,4 +115,22 @@ func handleIterationsParam(cmd *cobra.Command) (int, error) {
 	}
 
 	return iterationsInt, nil
+}
+
+func handleWorkersNumberParam(cmd *cobra.Command) (int, error) {
+	workersString, err := cmd.Flags().GetString("workers")
+	if err != nil {
+		return 0, fmt.Errorf("could not parse --workers command, err: %v", err)
+	}
+
+	workersInt, err := strconv.Atoi(workersString)
+	if err != nil && workersString != "" {
+		return 0, fmt.Errorf("workers provided was not a number, err: %v", err)
+	}
+
+	if workersInt<=0 {
+		return 0,fmt.Errorf("workers have to be at least 1, err")
+	}
+
+	return workersInt, nil
 }

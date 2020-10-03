@@ -11,11 +11,13 @@ import (
 	phttp "github.com/slysterous/print-scrape/internal/http"
 	"github.com/slysterous/print-scrape/internal/postgres"
 	"log"
+	"runtime"
 )
 
 func main() {
-	err:=godotenv.Load()
-	if err !=nil {
+	runtime.GOMAXPROCS(8)
+	err := godotenv.Load()
+	if err != nil {
 		log.Fatalf("could not load env file")
 	}
 	//init a db client.

@@ -255,5 +255,3 @@ func (cm CommandManager) PurgeCommand() error {
 	}
 	return nil
 }
-
-
