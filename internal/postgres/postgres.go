@@ -7,7 +7,7 @@ import (
 	//pq is the postgres driver for database/sql
 	"github.com/google/uuid"
 	_ "github.com/lib/pq"
-	printscrape "github.com/slysterous/print-scrape/internal/domain"
+	printscrape "github.com/slysterous/print-scrape/internal/printscrape"
 )
 
 // Client represents the postgres client.

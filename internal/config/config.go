@@ -1,7 +1,7 @@
 package config
 
 import (
-	printscrape "github.com/slysterous/print-scrape/internal/domain"
+	printscrape "github.com/slysterous/print-scrape/internal/printscrape"
 	"log"
 	"os"
 	"strconv"

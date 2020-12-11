@@ -3,13 +3,13 @@ package domain
 import (
 	"context"
 	"fmt"
-	customNumber "github.com/slysterous/print-scrape/pkg/customnumber"
+	customNumber "github.com/slysterous/custom-number"
 	"sync"
 	"time"
 )
 
 // StartCommand is what happens when the command is executed.
-func (cm CommandManager) StartCommand(fromCode string, iterations int,workerNumber int) error {
+func (cm CommandManager) StartCommand(fromCode string, iterations int, workerNumber int) error {
 	// mark the start time
 	start := time.Now()
 
@@ -34,14 +34,14 @@ func (cm CommandManager) StartCommand(fromCode string, iterations int,workerNumb
 	// create an index with the code to start from
 	index := createResumeCodeNumber(&fromCode)
 
-	fmt.Printf("Starting from Code: %s\n", index.SmartString())
+	fmt.Printf("Starting from Code: %s\n", index.String())
 
 	// produce codes in a channel and expose a produceMoreCodes channel to enable
 	// a feedback loop
-	codes, produceMoreCodes := produceCodes(ctx, index, iterations,workerNumber)
+	codes, produceMoreCodes := produceCodes(ctx, index, iterations, workerNumber)
 
 	// filter out codes if they already exist in the DB.
-	filteredCodes, filterErrors := filterCodes(ctx, cm.Storage, codes, produceMoreCodes,workerNumber)
+	filteredCodes, filterErrors := filterCodes(ctx, cm.Storage, codes, produceMoreCodes, workerNumber)
 	errcList = append(errcList, filterErrors)
 
 	// generate image entries on db and mark them as pending
@@ -158,22 +158,22 @@ func produceCodes(
 				iterationsCounter++
 			}
 			fmt.Println("IM HERE")
-			
+
 			select {
 			case <-produceMoreCodes:
 				fmt.Printf("iterationsCounter: %d  iterations: %d\n", iterationsCounter, iterations)
 				//fmt.Printf("PRODUCING CODE: %s \n", index.SmartString())
-			codesFor:	
-			for{
-				select{
-				case codes <- index.SmartString():
-					index.Increment()
-					break codesFor
-				case <-time.After(1 * time.Second):
-					fmt.Println("DEADLOCK TIMEOUT PRODUCE CODES")
-					break 
+			codesFor:
+				for {
+					select {
+					case codes <- index.String():
+						index.Increment()
+						break codesFor
+					case <-time.After(1 * time.Second):
+						fmt.Println("DEADLOCK TIMEOUT PRODUCE CODES")
+						break
+					}
 				}
-			}
 			case <-ctx.Done():
 				fmt.Printf("CONTEXT DONE on produce codes")
 				return
@@ -206,10 +206,10 @@ func filterCodes(
 				return
 			}
 			if exists {
-			
-				for1:
-				for{
-					select{
+
+			for1:
+				for {
+					select {
 					case produceMoreCodes <- struct{}{}:
 						break for1
 					case <-time.After(1 * time.Second):

@@ -1,8 +1,8 @@
 package postgres_test
 
 import (
-	printscrape "github.com/slysterous/print-scrape/internal/domain"
 	"github.com/slysterous/print-scrape/internal/postgres"
+	printscrape "github.com/slysterous/print-scrape/internal/printscrape"
 	"github.com/slysterous/print-scrape/internal/test"
 	"testing"
 	"time"

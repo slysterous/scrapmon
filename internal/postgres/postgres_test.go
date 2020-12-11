@@ -3,8 +3,8 @@ package postgres_test
 import (
 	"database/sql"
 	"github.com/DATA-DOG/go-sqlmock"
-	printscrape "github.com/slysterous/print-scrape/internal/domain"
 	"github.com/slysterous/print-scrape/internal/postgres"
+	printscrape "github.com/slysterous/print-scrape/internal/printscrape"
 	"testing"
 	"time"
 )

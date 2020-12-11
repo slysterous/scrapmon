@@ -6,33 +6,36 @@ import (
 	cobraClient "github.com/slysterous/print-scrape/internal/cobra"
 	"github.com/slysterous/print-scrape/internal/config"
 	cfg "github.com/slysterous/print-scrape/internal/config"
-	printscrape "github.com/slysterous/print-scrape/internal/domain"
 	file "github.com/slysterous/print-scrape/internal/file"
 	phttp "github.com/slysterous/print-scrape/internal/http"
 	"github.com/slysterous/print-scrape/internal/postgres"
+	printscrape "github.com/slysterous/print-scrape/internal/printscrape"
 	"log"
-	"runtime"
 )
 
 func main() {
-	runtime.GOMAXPROCS(8)
+
+	//load env.
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatalf("could not load env file")
 	}
-	//init a db client.
+
+	// fetch the config from env variables.
 	config := config.FromEnv()
 
 	pgClient, err := postgres.NewClient(getDataSource(cfg.FromEnv()), cfg.FromEnv().MaxDBConnections)
 	if err != nil {
 		log.Fatalf("could not connect to DB, err: %v", err)
 	}
+	
 	// init a file manager.
 	fileManager := file.NewManager(config.ScreenShotStorageFolder)
 	if err != nil {
 		log.Fatalf("could not get a file manager: %v", err)
 	}
 
+	//combine db and filestorage into generic storage.
 	storage := printscrape.Storage{
 		Fm: fileManager,
 		Dm: pgClient,

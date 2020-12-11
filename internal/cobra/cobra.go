@@ -2,7 +2,7 @@ package cobra
 
 import (
 	"fmt"
-	printscrape "github.com/slysterous/print-scrape/internal/domain"
+	printscrape "github.com/slysterous/print-scrape/internal/printscrape"
 	"github.com/spf13/cobra"
 	"strconv"
 )
@@ -62,16 +62,16 @@ func (c Client) RegisterStartCommand() {
 			}
 
 			workersNumber, err := handleWorkersNumberParam(cmd)
-			if err !=nil {
-				return fmt.Errorf("command validation error, err: %v",err)
+			if err != nil {
+				return fmt.Errorf("command validation error, err: %v", err)
 			}
-			return c.commandManager.StartCommand(from, iterations,workersNumber)
+			return c.commandManager.StartCommand(from, iterations, workersNumber)
 		},
 		SilenceErrors: true,
 	}
 	startCommand.Flags().StringP("from", "f", "", "starting imgur image code")
 	startCommand.Flags().StringP("iterations", "i", "", "how many images should be downloaded")
-	startCommand.Flags().StringP("workers","w","","the amount of workers to be utilized for async operations")
+	startCommand.Flags().StringP("workers", "w", "", "the amount of workers to be utilized for async operations")
 	startCommand.MarkFlagRequired("workers")
 	c.rootCmd.AddCommand(startCommand)
 }
@@ -128,8 +128,8 @@ func handleWorkersNumberParam(cmd *cobra.Command) (int, error) {
 		return 0, fmt.Errorf("workers provided was not a number, err: %v", err)
 	}
 
-	if workersInt<=0 {
-		return 0,fmt.Errorf("workers have to be at least 1, err")
+	if workersInt <= 0 {
+		return 0, fmt.Errorf("workers have to be at least 1, err")
 	}
 
 	return workersInt, nil

@@ -3,14 +3,13 @@ package http
 import (
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
-	"github.com/slysterous/print-scrape/internal/domain"
-	"strings"
-	//	printscrape "github.com/slysterous/print-scrape/internal/domain"
+	"github.com/slysterous/print-scrape/internal/printscrape"
 	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
+	"strings"
 	//"os"
 )
 
