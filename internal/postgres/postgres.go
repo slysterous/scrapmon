@@ -67,7 +67,7 @@ func (c *Client) UpdateScreenShotStatusByCode(code string, status printscrape.Sc
 
 func (c *Client) UpdateScreenShotByCode(ss printscrape.ScreenShot) error {
 	scrap := transformDomainScrap(ss)
-	const query = `UPDATE screenshots SET fileUri = $1,downloadStatus = $2 WHERE refCode = $3;`
+	const query = `UPDATE screenshots SET fileUri= $1,downloadStatus= $2 WHERE refCode = $3;`
 	_, err := c.DB.Exec(query, scrap.fileURI, scrap.downloadStatus, scrap.refCode)
 	if err != nil {
 		return fmt.Errorf("postgres: executing update of scrap: %v", err)
@@ -86,7 +86,6 @@ func (c *Client) GetLatestCreatedScreenShotCode() (*string, error) {
 	case sql.ErrNoRows:
 		return nil, nil
 	case nil:
-		fmt.Println("GAMIOLA")
 		return &code, nil
 	default:
 		return nil, fmt.Errorf("postgres: executing select screenshot by code statement: %v", err)
@@ -105,9 +104,8 @@ func (c *Client) CodeAlreadyExists(code string) (bool, error) {
 	row := c.DB.QueryRow(`
 		SELECT
 		id
-		FROM ScreenShots
-		WHERE refCode=$1
-	
+		FROM screenshots
+		WHERE refCode=$1	
 	`, code)
 
 	err := row.Scan(&s.fileURI)

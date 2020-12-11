@@ -28,7 +28,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("could not connect to DB, err: %v", err)
 	}
-	
+
 	// init a file manager.
 	fileManager := file.NewManager(config.ScreenShotStorageFolder)
 	if err != nil {
