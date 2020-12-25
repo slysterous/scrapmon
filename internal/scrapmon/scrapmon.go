@@ -70,9 +70,9 @@ type Purger interface {
 
 // DatabaseManager defines the storage management behaviour.
 type DatabaseManager interface {
-	CreateScrap(ss Scrap) (int, error)
+	CreateScrap(s Scrap) (int, error)
 	UpdateScrapStatusByCode(code string, status ScrapStatus) error
-	UpdateScrapByCode(ss Scrap) error
+	UpdateScrapByCode(s Scrap) error
 	GetLatestCreatedScrapCode() (*string, error)
 	CodeAlreadyExists(code string) (bool, error)
 	Purger

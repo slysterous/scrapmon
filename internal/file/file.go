@@ -4,18 +4,19 @@ import (
 	"fmt"
 	scrapmon "github.com/slysterous/scrapmon/internal/scrapmon"
 	"io/ioutil"
+	"os"
 	"path"
 )
 
 // Manager is
 type Manager struct {
-	ImageFolder string
+	ScrapFolder string
 }
 
 // NewManager constructs a new file manager.
 func NewManager(imageFolder string) *Manager {
 	return &Manager{
-		ImageFolder: imageFolder,
+		ScrapFolder: imageFolder,
 	}
 }
 
@@ -30,11 +31,20 @@ func (m Manager) SaveFile(src scrapmon.ScrapedFile) error {
 }
 
 func (m Manager) composeFilePath(code, ext string) string {
-	return path.Join(m.ImageFolder, code+"."+ext)
+	return path.Join(m.ScrapFolder, code+"."+ext)
 }
 
 // Purge deletes every file from the file system
 func (m Manager) Purge() error {
-	// TODO fetch config to get the path in which everything is saved
+	dir, err := ioutil.ReadDir(m.ScrapFolder)
+	if err !=nil {
+		return fmt.Errorf("file: could not read scrap directory, err: %v",err)
+	}
+	for _, d := range dir {
+		err = os.RemoveAll(path.Join([]string{"tmp", d.Name()}...))
+		if err!=nil {
+			return fmt.Errorf("file: could not delete scrap, err: %v",err)
+		}
+	}
 	return nil
 }
