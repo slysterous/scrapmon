@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	scrapmon "github.com/slysterous/scrapmon/internal/scrapmon"
 	"log"
 	"os"
@@ -35,7 +36,7 @@ func getString(key, fallback string) string {
 
 // getString returns the converted int value from a string env variable.
 func getInt(key string, fallback int) int {
-	strValue := getString(key, string(fallback))
+	strValue := getString(key, fmt.Sprint(fallback))
 
 	intValue, err := strconv.Atoi(strValue)
 	if err != nil {

@@ -41,4 +41,3 @@ func TestClientCreateScrap(t *testing.T) {
 		t.Errorf("Unexpected scrap id returned")
 	}
 }
-

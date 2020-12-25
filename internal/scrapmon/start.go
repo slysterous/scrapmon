@@ -33,7 +33,6 @@ func (cm CommandManager) StartCommand(fromCode string, iterations int, workerNum
 
 	// create an index with the code to start from
 	index := createResumeCodeNumber(&fromCode)
-
 	fmt.Printf("Starting from Code: %s\n", index.String())
 
 	// produce codes in a channel and expose a produceMoreCodes channel to enable
