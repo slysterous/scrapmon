@@ -72,7 +72,7 @@ type Purger interface {
 type DatabaseManager interface {
 	CreateScrap(ss Scrap) (int, error)
 	UpdateScrapStatusByCode(code string, status ScrapStatus) error
-	UpdateScrapShotByCode(ss Scrap) error
+	UpdateScrapByCode(ss Scrap) error
 	GetLatestCreatedScrapCode() (*string, error)
 	CodeAlreadyExists(code string) (bool, error)
 	Purger

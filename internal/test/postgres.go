@@ -47,10 +47,10 @@ func TearDown(db io.Closer, t *testing.T) {
 }
 
 func getDataSource() string {
-	user := getEnv("PRINT_SCRAPE_DB_USER", "postgres")
-	pass := getEnv("PRINT_SCRAPE_DB_PASSWORD", "password")
-	host := getEnv("PRINT_SCRAPE_DB_HOST", "127.0.0.1")
-	port := getEnv("PRINT_SCRAPE_DB_PORT", "5432")
+	user := getEnv("SCRAPMON_DB_USER", "postgres")
+	pass := getEnv("SCRAPMON_DB_PASSWORD", "password")
+	host := getEnv("SCRAPMON_DB_HOST", "127.0.0.1")
+	port := getEnv("SCRAPMON_DB_PORT", "5432")
 	name := getEnv("DB_NAME", "scrapmon")
 	return "host=" + host + " port=" + port + " user=" + user + " password=" + pass + " dbname=" + name + " sslmode=disable"
 }

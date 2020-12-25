@@ -15,7 +15,7 @@ func (cm CommandManager) StartCommand(fromCode string, iterations int, workerNum
 
 	// if no code was provided, then we resume from the last created code or from the beginning.
 	if fromCode == "" {
-		lastCode, err := cm.Storage.Dm.GetLatestCreatedScreenShotCode()
+		lastCode, err := cm.Storage.Dm.GetLatestCreatedScrapCode()
 		if err != nil {
 			return fmt.Errorf("could not get latest image code, err: %v", err)
 		}
@@ -62,7 +62,7 @@ func (cm CommandManager) StartCommand(fromCode string, iterations int, workerNum
 	downloadedImages := mergeDownloads(ctx, downloadWorkers...)
 
 	// initialize an empty pool of workers
-	saveWorkers := make([]<-chan ScreenShot, workerNumber)
+	saveWorkers := make([]<-chan Scrap, workerNumber)
 	saveWorkersErrors := make(<-chan error, 1)
 
 	// start workers
@@ -237,9 +237,9 @@ func generatePendingImages(
 	ctx context.Context,
 	storage Storage,
 	filteredCodes <-chan string,
-) (<-chan ScreenShot, <-chan error) {
+) (<-chan Scrap, <-chan error) {
 
-	pendingImages := make(chan ScreenShot, 10)
+	pendingImages := make(chan Scrap, 10)
 	errc := make(chan error, 1)
 
 	go func() {
@@ -247,14 +247,14 @@ func generatePendingImages(
 		defer close(errc)
 
 		for code := range filteredCodes {
-			pendingImage := ScreenShot{
+			pendingImage := Scrap{
 				RefCode:       code,
 				Status:        StatusPending,
 				CodeCreatedAt: time.Now(),
 			}
 			fmt.Printf("Creating an entry on DB for: %s\n", code)
 
-			_, err := storage.Dm.CreateScreenShot(pendingImage)
+			_, err := storage.Dm.CreateScrap(pendingImage)
 			if err != nil {
 				// Handle an error that occurs during the goroutine.
 				errc <- err
@@ -276,7 +276,7 @@ func downloadImages(
 	ctx context.Context,
 	storage Storage,
 	scrapper Scrapper,
-	pendingImages <-chan ScreenShot,
+	pendingImages <-chan Scrap,
 	produceMoreCodes chan<- struct{},
 ) (<-chan ScrapedFile, <-chan error) {
 
@@ -297,7 +297,7 @@ func downloadImages(
 			//If the image was not found then we need a new code
 			if ScrapedFile.Data == nil && err == nil {
 				fmt.Printf("Image %s was not found, requesting a new one! \n", image.RefCode)
-				err = storage.Dm.UpdateScreenShotStatusByCode(image.RefCode, StatusNotFound)
+				err = storage.Dm.UpdateScrapStatusByCode(image.RefCode, StatusNotFound)
 				if err != nil {
 					errc <- err
 					return
@@ -305,7 +305,7 @@ func downloadImages(
 				produceMoreCodes <- struct{}{}
 				continue
 			}
-			err = storage.Dm.UpdateScreenShotStatusByCode(image.RefCode, StatusOngoing)
+			err = storage.Dm.UpdateScrapStatusByCode(image.RefCode, StatusOngoing)
 			if err != nil {
 				errc <- err
 				return
@@ -352,9 +352,9 @@ func mergeDownloads(ctx context.Context, channels ...<-chan ScrapedFile) <-chan 
 func saveImages(storage Storage,
 	ctx context.Context,
 	downloadedImages <-chan ScrapedFile) (
-	<-chan ScreenShot, <-chan error) {
+	<-chan Scrap, <-chan error) {
 
-	savedImages := make(chan ScreenShot, 10)
+	savedImages := make(chan Scrap, 10)
 	errc := make(chan error, 1)
 
 	go func() {
@@ -368,12 +368,12 @@ func saveImages(storage Storage,
 				return
 			}
 
-			ss := ScreenShot{
+			ss := Scrap{
 				RefCode: image.Code,
 				Status:  StatusSuccess,
 				FileURI: "SOMEWHERE" + image.Code + "." + image.Type,
 			}
-			err = storage.Dm.UpdateScreenShotByCode(ss)
+			err = storage.Dm.UpdateScrapByCode(ss)
 			if err != nil {
 				errc <- err
 				return
@@ -389,12 +389,12 @@ func saveImages(storage Storage,
 	return savedImages, errc
 }
 
-func mergeSaves(ctx context.Context, channels ...<-chan ScreenShot) <-chan ScreenShot {
+func mergeSaves(ctx context.Context, channels ...<-chan Scrap) <-chan Scrap {
 	var wg sync.WaitGroup
 
 	wg.Add(len(channels))
-	savedImages := make(chan ScreenShot)
-	multiplex := func(c <-chan ScreenShot) {
+	savedImages := make(chan Scrap)
+	multiplex := func(c <-chan Scrap) {
 		defer wg.Done()
 		for i := range c {
 			select {

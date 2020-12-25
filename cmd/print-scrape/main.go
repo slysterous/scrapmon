@@ -30,7 +30,7 @@ func main() {
 	}
 
 	// init a file manager.
-	fileManager := file.NewManager(conf.ScreenShotStorageFolder)
+	fileManager := file.NewManager(conf.ScrapStorageFolder)
 	if err != nil {
 		log.Fatalf("could not get a file manager: %v", err)
 	}

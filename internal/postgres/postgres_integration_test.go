@@ -26,13 +26,13 @@ func TestClientCreateScrap(t *testing.T) {
 		DB: db,
 	}
 
-	wantedScrap := scrapmon.ScreenShot{
+	wantedScrap := scrapmon.Scrap{
 		RefCode:       "00000lHB00",
 		CodeCreatedAt: time.Now(),
 		FileURI:       "fileuri",
 	}
 
-	id, err := client.CreateScreenShot(wantedScrap)
+	id, err := client.CreateScrap(wantedScrap)
 	if err != nil {
 		t.Fatalf("could not create scrap err: %v", err)
 	}

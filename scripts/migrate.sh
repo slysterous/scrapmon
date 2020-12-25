@@ -37,14 +37,14 @@ set +e
 
 # Run default migration
 echo "Migrating database..."
-migrate_db ${PRINT_SCRAPE_DB_HOST} ${PRINT_SCRAPE_DB_PORT} ${PRINT_SCRAPE_DB_NAME} ${PRINT_SCRAPE_DB_USER} ${PRINT_SCRAPE_DB_PASSWORD}
+migrate_db ${SCRAPMON_DB_HOST} ${SCRAPMON_DB_PORT} ${SCRAPMON_DB_NAME} ${SCRAPMON_DB_USER} ${SCRAPMON_DB_PASSWORD}
 check_success
 
 # In case test database config exists, run the migrations on it too
-if [ ! -z ${PRINT_SCRAPE_TEST_DB_HOST+x} ] && [ ! -z ${PRINT_SCRAPE_TEST_DB_PORT+x} ] && [ ! -z ${PRINT_SCRAPE_TEST_DB_USER+x} ]; then
+if [ ! -z ${SCRAPMON_TEST_DB_HOST+x} ] && [ ! -z ${SCRAPMON_TEST_DB_PORT+x} ] && [ ! -z ${SCRAPMON_TEST_DB_USER+x} ]; then
     # Run test migration
     echo "Migrating test database..."
-    migrate_db ${PRINT_SCRAPE_TEST_DB_HOST} ${PRINT_SCRAPE_TEST_DB_PORT} ${PRINT_SCRAPE_DB_NAME} ${PRINT_SCRAPE_TEST_DB_USER} ${PRINT_SCRAPE_DB_PASSWORD}
+    migrate_db ${SCRAPMON_TEST_DB_HOST} ${SCRAPMON_TEST_DB_PORT} ${SCRAPMON_DB_NAME} ${SCRAPMON_TEST_DB_USER} ${SCRAPMON_DB_PASSWORD}
     check_success
 fi
 echo "Migration succeeded, starting scrapmon..."
