@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"errors"
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/slysterous/print-scrape/internal/postgres"
-	printscrape "github.com/slysterous/print-scrape/internal/printscrape"
+	"github.com/slysterous/scrapmon/internal/postgres"
+	scrapmon "github.com/slysterous/scrapmon/internal/scrapmon"
 	"testing"
 	"time"
 )
@@ -20,7 +20,7 @@ func TestGetLatestCreatedScrapCode(t *testing.T) {
 
 		want := "150000"
 
-		const query = "SELECT refCode from screenshots ORDER BY codeCreatedAt DESC limit 1"
+		const query = "SELECT refCode from Scraps ORDER BY codeCreatedAt DESC limit 1"
 
 		columns := []string{"RefCode"}
 
@@ -28,7 +28,7 @@ func TestGetLatestCreatedScrapCode(t *testing.T) {
 			want,
 		))
 
-		got, err := client.GetLatestCreatedScreenShotCode()
+		got, err := client.GetLatestCreatedScrapCode()
 		if err != nil {
 			t.Fatalf("expected exec not to return error %v", err)
 		}
@@ -49,11 +49,11 @@ func TestGetLatestCreatedScrapCode(t *testing.T) {
 
 		client := postgres.Client{DB: db}
 
-		const query = "SELECT refCode from screenshots ORDER BY codeCreatedAt DESC limit 1"
+		const query = "SELECT refCode from Scraps ORDER BY codeCreatedAt DESC limit 1"
 
 		mock.ExpectQuery(query).WillReturnError(errors.New("test error"))
 
-		got, err := client.GetLatestCreatedScreenShotCode()
+		got, err := client.GetLatestCreatedScrapCode()
 		if err == nil {
 			t.Fatalf("expected err, got:%v", err)
 		}
@@ -74,13 +74,13 @@ func TestGetLatestCreatedScrapCode(t *testing.T) {
 
 		client := postgres.Client{DB: db}
 
-		const query = "SELECT refCode from screenshots ORDER BY codeCreatedAt DESC limit 1"
+		const query = "SELECT refCode from Scraps ORDER BY codeCreatedAt DESC limit 1"
 
 		columns := []string{"RefCode"}
 
 		mock.ExpectQuery(query).WillReturnRows(mock.NewRows(columns))
 
-		got, err := client.GetLatestCreatedScreenShotCode()
+		got, err := client.GetLatestCreatedScrapCode()
 		if err != nil {
 			t.Fatalf("expected exec not to return error %v", err)
 		}
@@ -104,12 +104,12 @@ func TestGetScrap(t *testing.T) {
 
 		client := postgres.Client{DB: db}
 
-		want := printscrape.ScreenShot{
+		want := scrapmon.Scrap{
 			FileURI: "testfile",
 			RefCode: "testcode",
 		}
 
-		const query = "SELECT fileURI FROM ScreenShots WHERE refCode\\=.*"
+		const query = "SELECT fileURI FROM Scraps WHERE refCode\\=.*"
 
 		columns := []string{"FileURI"}
 
@@ -141,7 +141,7 @@ func TestGetScrap(t *testing.T) {
 		defer closeDB(db)
 
 		client := postgres.Client{DB: db}
-		const query = "SELECT fileURI FROM ScreenShots WHERE refCode\\=.*"
+		const query = "SELECT fileURI FROM Scraps WHERE refCode\\=.*"
 
 		mock.ExpectQuery(query).WillReturnError(errors.New(""))
 
@@ -161,7 +161,7 @@ func TestGetScrap(t *testing.T) {
 		defer closeDB(db)
 
 		client := postgres.Client{DB: db}
-		const query = "SELECT fileURI FROM ScreenShots WHERE refCode\\=.*"
+		const query = "SELECT fileURI FROM Scraps WHERE refCode\\=.*"
 
 		mock.ExpectQuery(query).WillReturnError(sql.ErrNoRows)
 
@@ -188,16 +188,16 @@ func TestCreateScrap(t *testing.T) {
 
 		client := postgres.Client{DB: db}
 
-		want := printscrape.ScreenShot{
+		want := scrapmon.Scrap{
 			FileURI:       "testfile",
 			RefCode:       "testcode",
 			CodeCreatedAt: time.Now(),
 		}
 
-		const query = "INSERT INTO screenshots \\(.*\\) VALUES .* RETURNING id"
+		const query = "INSERT INTO Scraps \\(.*\\) VALUES .* RETURNING id"
 		mock.ExpectQuery(query).WithArgs(want.RefCode, want.CodeCreatedAt, want.FileURI).WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(1))
 
-		got, err := client.CreateScreenShot(want)
+		got, err := client.CreateScrap(want)
 		if err != nil {
 			t.Fatalf("could not create scrap: %v", err)
 		}
@@ -212,16 +212,16 @@ func TestCreateScrap(t *testing.T) {
 
 		client := postgres.Client{DB: db}
 
-		want := printscrape.ScreenShot{
+		want := scrapmon.Scrap{
 			FileURI:       "testfile",
 			RefCode:       "testcode",
 			CodeCreatedAt: time.Now(),
 		}
 
-		const query = "INSERT INTO screenshots \\(.*\\) VALUES .* RETURNING id"
+		const query = "INSERT INTO Scraps \\(.*\\) VALUES .* RETURNING id"
 		mock.ExpectQuery(query).WithArgs(want.RefCode, want.CodeCreatedAt, want.FileURI).WillReturnError(errors.New("test error"))
 
-		_, err := client.CreateScreenShot(want)
+		_, err := client.CreateScrap(want)
 		if err == nil {
 			t.Fatal("expected error, got nil")
 		}
@@ -237,10 +237,10 @@ func TestUpdateScrapStatusByCode(t *testing.T) {
 		client := postgres.Client{DB: db}
 		refCode := "testcode"
 
-		const query = "UPDATE screenshots SET downloadStatus = .* WHERE refCode = .*"
-		mock.ExpectExec(query).WithArgs(printscrape.StatusSuccess, refCode).WillReturnResult(sqlmock.NewResult(0, 1))
+		const query = "UPDATE Scraps SET downloadStatus = .* WHERE refCode = .*"
+		mock.ExpectExec(query).WithArgs(scrapmon.StatusSuccess, refCode).WillReturnResult(sqlmock.NewResult(0, 1))
 
-		err := client.UpdateScreenShotStatusByCode(refCode, printscrape.StatusSuccess)
+		err := client.UpdateScrapStatusByCode(refCode, scrapmon.StatusSuccess)
 		if err != nil {
 			t.Fatalf("expected nil, got err: %v", err)
 		}
@@ -253,10 +253,10 @@ func TestUpdateScrapStatusByCode(t *testing.T) {
 		client := postgres.Client{DB: db}
 		refCode := "testcode"
 
-		const query = "UPDATE screenshots SET downloadStatus = .* WHERE refCode = .*"
-		mock.ExpectExec(query).WithArgs(printscrape.StatusSuccess, refCode).WillReturnError(errors.New("test error"))
+		const query = "UPDATE Scraps SET downloadStatus = .* WHERE refCode = .*"
+		mock.ExpectExec(query).WithArgs(scrapmon.StatusSuccess, refCode).WillReturnError(errors.New("test error"))
 
-		err := client.UpdateScreenShotStatusByCode(refCode, printscrape.StatusSuccess)
+		err := client.UpdateScrapStatusByCode(refCode, scrapmon.StatusSuccess)
 		if err == nil {
 			t.Fatalf("expected error, got nil")
 		}
@@ -271,16 +271,16 @@ func TestUpdateScrapByCode(t *testing.T) {
 
 		client := postgres.Client{DB: db}
 
-		want := printscrape.ScreenShot{
+		want := scrapmon.Scrap{
 			FileURI:       "testfile",
 			RefCode:       "testcode",
-			Status: printscrape.StatusFailure,
+			Status: scrapmon.StatusFailure,
 		}
 
-		const query = "UPDATE screenshots SET fileUri= .*,downloadStatus= .* WHERE refCode = .*;"
-		mock.ExpectExec(query).WithArgs(want.FileURI, printscrape.StatusFailure, want.RefCode).WillReturnResult(sqlmock.NewResult(0, 1))
+		const query = "UPDATE Scraps SET fileUri= .*,downloadStatus= .* WHERE refCode = .*;"
+		mock.ExpectExec(query).WithArgs(want.FileURI, scrapmon.StatusFailure, want.RefCode).WillReturnResult(sqlmock.NewResult(0, 1))
 
-		err := client.UpdateScreenShotByCode(want)
+		err := client.UpdateScrapByCode(want)
 		if err != nil {
 			t.Fatalf("expected nil, got: %v", err)
 		}
@@ -292,15 +292,15 @@ func TestUpdateScrapByCode(t *testing.T) {
 
 		client := postgres.Client{DB: db}
 
-		want := printscrape.ScreenShot{
+		want := scrapmon.Scrap{
 			FileURI:       "testfile",
 			RefCode:       "testcode",
-			Status: printscrape.StatusFailure,
+			Status: scrapmon.StatusFailure,
 		}
 
-		const query = "UPDATE screenshots SET fileUri= .*,downloadStatus= .* WHERE refCode = .*;"
-		mock.ExpectExec(query).WithArgs(want.FileURI, printscrape.StatusFailure, want.RefCode).WillReturnError(errors.New("test error"))
-		err := client.UpdateScreenShotByCode(want)
+		const query = "UPDATE Scraps SET fileUri= .*,downloadStatus= .* WHERE refCode = .*;"
+		mock.ExpectExec(query).WithArgs(want.FileURI, scrapmon.StatusFailure, want.RefCode).WillReturnError(errors.New("test error"))
+		err := client.UpdateScrapByCode(want)
 		if err == nil {
 			t.Fatal("expected error, got nil")
 		}
@@ -315,7 +315,7 @@ func TestCodeAlreadyExists(t *testing.T) {
 
 		client := postgres.Client{DB: db}
 
-		const query = "SELECT id FROM screenshots WHERE refCode\\=.*"
+		const query = "SELECT id FROM Scraps WHERE refCode\\=.*"
 
 		columns := []string{"id"}
 
@@ -344,7 +344,7 @@ func TestCodeAlreadyExists(t *testing.T) {
 
 		client := postgres.Client{DB: db}
 
-		const query = "SELECT id FROM screenshots WHERE refCode\\=.*"
+		const query = "SELECT id FROM Scraps WHERE refCode\\=.*"
 
 		mock.ExpectQuery(query).WillReturnError(errors.New("test error"))
 
@@ -369,7 +369,7 @@ func TestCodeAlreadyExists(t *testing.T) {
 
 		client := postgres.Client{DB: db}
 
-		const query = "SELECT id FROM screenshots WHERE refCode\\=.*"
+		const query = "SELECT id FROM Scraps WHERE refCode\\=.*"
 
 		mock.ExpectQuery(query).WillReturnError(sql.ErrNoRows)
 
@@ -397,7 +397,7 @@ func TestPurge(t *testing.T) {
 
 		client := postgres.Client{DB: db}
 
-		const query = "TRUNCATE TABLE screenshots"
+		const query = "TRUNCATE TABLE Scraps"
 
 		mock.ExpectExec(query).WillReturnResult(sqlmock.NewResult(0, 1))
 
@@ -418,7 +418,7 @@ func TestPurge(t *testing.T) {
 
 		client := postgres.Client{DB: db}
 
-		const query = "TRUNCATE TABLE screenshots"
+		const query = "TRUNCATE TABLE Scraps"
 
 		mock.ExpectExec(query).WillReturnError(errors.New("test error"))
 

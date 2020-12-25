@@ -1,17 +1,17 @@
 package config
 
 import (
-	printscrape "github.com/slysterous/print-scrape/internal/printscrape"
+	scrapmon "github.com/slysterous/scrapmon/internal/scrapmon"
 	"log"
 	"os"
 	"strconv"
 )
 
 // FromEnv returns the apps configuration based on environmental variables including sane defaults.
-func FromEnv() printscrape.Config {
-	return printscrape.Config{
+func FromEnv() scrapmon.Config {
+	return scrapmon.Config{
 		DatabaseHost:            getString("PRINT_SCRAPE_DB_HOST", "127.0.0.1"),
-		DatabaseName:            getString("PRINT_SCRAPE_DB_NAME", "print-scrape"),
+		DatabaseName:            getString("PRINT_SCRAPE_DB_NAME", "scrapmon"),
 		DatabasePort:            getString("PRINT_SCRAPE_DB_PORT", "5432"),
 		DatabaseUser:            getString("PRINT_SCRAPE_DB_USER", "postgres"),
 		DatabasePassword:        getString("PRINT_SCRAPE_DB_PASSWORD", "password"),

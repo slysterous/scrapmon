@@ -3,7 +3,7 @@ package http
 import (
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
-	"github.com/slysterous/print-scrape/internal/printscrape"
+	"github.com/slysterous/scrapmon/internal/scrapmon"
 	"io"
 	"io/ioutil"
 	"log"
@@ -113,8 +113,8 @@ func (c Client) scrapeScreenShotURLByCode(code string) (*string, error) {
 	return &screenShotURL, nil
 }
 
-// ScrapeImageByCode fetches an prnt.sc image stream an image type and an error.
-func (c Client) ScrapeImageByCode(code string) (domain.ScrapedImage, error) {
+// ScrapeByCode fetches an prnt.sc image stream an image type and an error.
+func (c Client) ScrapeByCode(code string) (domain.ScrapedFile, error) {
 
 	url := "https://i.imgur.com/" + code + ".png"
 
@@ -124,14 +124,14 @@ func (c Client) ScrapeImageByCode(code string) (domain.ScrapedImage, error) {
 	response, err := c.httpClient.Get(url)
 	if err != nil {
 		fmt.Printf("http: could not download image stream for url: %s, error %v \n", url, err)
-		return domain.ScrapedImage{}, fmt.Errorf("http: could not download image stream for url: %s, error %v", url, err)
+		return domain.ScrapedFile{}, fmt.Errorf("http: could not download image stream for url: %s, error %v", url, err)
 	}
 
 	defer response.Body.Close()
 
 	if response.StatusCode == 404 || response.StatusCode == 302 {
 		//fmt.Printf("NOT FOUND! STATUS: %d \n", response.StatusCode)
-		return domain.ScrapedImage{}, nil
+		return domain.ScrapedFile{}, nil
 	}
 
 	//fmt.Printf("STATUS: %d \n", response.StatusCode)
@@ -143,7 +143,7 @@ func (c Client) ScrapeImageByCode(code string) (domain.ScrapedImage, error) {
 
 	if err != nil {
 		//fmt.Printf("ERROR2 \n")
-		return domain.ScrapedImage{}, fmt.Errorf("http: could not extract data from imagestream, err: %v", err)
+		return domain.ScrapedFile{}, fmt.Errorf("http: could not extract data from imagestream, err: %v", err)
 	}
 
 	contentType := response.Header.Get("Content-Type")
@@ -153,12 +153,12 @@ func (c Client) ScrapeImageByCode(code string) (domain.ScrapedImage, error) {
 		imageType = "gif"
 	}
 
-	scrapedImage := domain.ScrapedImage{
+	ScrapedFile := domain.ScrapedFile{
 		Data: contents,
 		Type: imageType,
 		Code: code,
 	}
-	return scrapedImage, nil
+	return ScrapedFile, nil
 }
 
 // // GetImageUrlByCode fetches a ScreenShot's actual img url from a code.
@@ -219,7 +219,7 @@ func (c Client) ScrapeImageByCode(code string) (domain.ScrapedImage, error) {
 // }
 
 // // DownloadImage attemps to download an image that belongs to a 6digit code in prnt.sc.
-// func (c *Client) DownloadScreenShot(code string, filepath string, manager printscrape.FileManager) error {
+// func (c *Client) DownloadScreenShot(code string, filepath string, manager scrapmon.FileManager) error {
 
 // 	imgURL, err := c.fetchScreenShotSourceLinkByCode(code)
 // 	if err != nil {

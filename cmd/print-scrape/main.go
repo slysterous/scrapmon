@@ -3,13 +3,12 @@ package main
 import (
 	"fmt"
 	"github.com/joho/godotenv"
-	cobraClient "github.com/slysterous/print-scrape/internal/cobra"
-	"github.com/slysterous/print-scrape/internal/config"
-	cfg "github.com/slysterous/print-scrape/internal/config"
-	file "github.com/slysterous/print-scrape/internal/file"
-	phttp "github.com/slysterous/print-scrape/internal/http"
-	"github.com/slysterous/print-scrape/internal/postgres"
-	printscrape "github.com/slysterous/print-scrape/internal/printscrape"
+	cobraClient "github.com/slysterous/scrapmon/internal/cobra"
+	file "github.com/slysterous/scrapmon/internal/file"
+	phttp "github.com/slysterous/scrapmon/internal/http"
+	"github.com/slysterous/scrapmon/internal/postgres"
+	scrapmon "github.com/slysterous/scrapmon/internal/scrapmon"
+	config "github.com/slysterous/scrapmon/internal/config"
 	"log"
 )
 
@@ -22,29 +21,31 @@ func main() {
 	}
 
 	// fetch the config from env variables.
-	config := config.FromEnv()
+	conf := config.FromEnv()
 
-	pgClient, err := postgres.NewClient(getDataSource(cfg.FromEnv()), cfg.FromEnv().MaxDBConnections)
+	// init database manager
+	pgClient, err := postgres.NewClient(getDataSource(conf), conf.MaxDBConnections)
 	if err != nil {
 		log.Fatalf("could not connect to DB, err: %v", err)
 	}
 
 	// init a file manager.
-	fileManager := file.NewManager(config.ScreenShotStorageFolder)
+	fileManager := file.NewManager(conf.ScreenShotStorageFolder)
 	if err != nil {
 		log.Fatalf("could not get a file manager: %v", err)
 	}
 
 	//combine db and filestorage into generic storage.
-	storage := printscrape.Storage{
+	storage := scrapmon.Storage{
 		Fm: fileManager,
 		Dm: pgClient,
 	}
 
+	//TODO fix the TOR client
 	//scrapper := phttp.NewProxyChainClient("127.0.0.1", "9050")
 	scrapper := phttp.NewClient()
 
-	commandManager := printscrape.CommandManager{
+	commandManager := scrapmon.CommandManager{
 		Storage:  storage,
 		Scrapper: scrapper,
 	}
@@ -60,7 +61,7 @@ func main() {
 	fmt.Println("Execution has completed Successfuly!")
 }
 
-func getDataSource(cfg printscrape.Config) string {
+func getDataSource(cfg scrapmon.Config) string {
 	user := cfg.DatabaseUser
 	pass := cfg.DatabasePassword
 	host := cfg.DatabaseHost

@@ -2,7 +2,7 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 CREATE TYPE status AS ENUM ('pending', 'ongoing','notfound','success','failure');
-CREATE TABLE IF NOT EXISTS screenshots
+CREATE TABLE IF NOT EXISTS scraps
 (
     id SERIAL PRIMARY KEY,
     uuid uuid DEFAULT uuid_generate_v4 (),

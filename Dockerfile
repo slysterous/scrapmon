@@ -1,15 +1,15 @@
 FROM golang:1.13 as builder
-WORKDIR /home/print-scrape
+WORKDIR /home/scrapmon
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -mod vendor -a -installsuffix cgo -o print-scrape ./cmd/print-scrape/main.go && wget https://github.com/golang-migrate/migrate/releases/download/v4.1.0/migrate.linux-amd64.tar.gz && tar -xvf migrate.linux-amd64.tar.gz && mv migrate.linux-amd64 migrate
+RUN CGO_ENABLED=0 GOOS=linux go build -mod vendor -a -installsuffix cgo -o scrapmon ./cmd/scrapmon/main.go && wget https://github.com/golang-migrate/migrate/releases/download/v4.1.0/migrate.linux-amd64.tar.gz && tar -xvf migrate.linux-amd64.tar.gz && mv migrate.linux-amd64 migrate
 
 FROM alpine
 
 RUN apk add --no-cache tzdata
 
-COPY --from=builder /home/print-scrape/print-scrape .
-COPY --from=builder /home/print-scrape/scripts/migrate .
-COPY --from=builder /home/print-scrape/internal/migrations ./internal/migrations
-COPY --from=builder /home/print-scrape/scripts/migrate.sh .
+COPY --from=builder /home/scrapmon/scrapmon .
+COPY --from=builder /home/scrapmon/scripts/migrate .
+COPY --from=builder /home/scrapmon/internal/migrations ./internal/migrations
+COPY --from=builder /home/scrapmon/scripts/migrate.sh .
 
-CMD [ "sh", "-c",  "/scripts/migrate.sh && /print-scrape" ]
+CMD [ "sh", "-c",  "/scripts/migrate.sh && /scrapmon" ]

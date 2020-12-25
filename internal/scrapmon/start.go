@@ -49,7 +49,7 @@ func (cm CommandManager) StartCommand(fromCode string, iterations int, workerNum
 	errcList = append(errcList, pendingErrors)
 
 	// initialize an empty pool of workers
-	downloadWorkers := make([]<-chan ScrapedImage, workerNumber)
+	downloadWorkers := make([]<-chan ScrapedFile, workerNumber)
 	downloadWorkerErrors := make(<-chan error, 1)
 
 	// start workers
@@ -275,12 +275,12 @@ func generatePendingImages(
 func downloadImages(
 	ctx context.Context,
 	storage Storage,
-	scrapper ImageScrapper,
+	scrapper Scrapper,
 	pendingImages <-chan ScreenShot,
 	produceMoreCodes chan<- struct{},
-) (<-chan ScrapedImage, <-chan error) {
+) (<-chan ScrapedFile, <-chan error) {
 
-	imagesToSave := make(chan ScrapedImage, 10)
+	imagesToSave := make(chan ScrapedFile, 10)
 	errc := make(chan error, 1)
 
 	go func() {
@@ -288,14 +288,14 @@ func downloadImages(
 		defer close(errc)
 
 		for image := range pendingImages {
-			scrapedImage, err := scrapper.ScrapeImageByCode(image.RefCode)
+			ScrapedFile, err := scrapper.ScrapeByCode(image.RefCode)
 			if err != nil {
 				// Handle an error that occurs during the goroutine.
 				errc <- err
 				return
 			}
 			//If the image was not found then we need a new code
-			if scrapedImage.Data == nil && err == nil {
+			if ScrapedFile.Data == nil && err == nil {
 				fmt.Printf("Image %s was not found, requesting a new one! \n", image.RefCode)
 				err = storage.Dm.UpdateScreenShotStatusByCode(image.RefCode, StatusNotFound)
 				if err != nil {
@@ -312,7 +312,7 @@ func downloadImages(
 			}
 
 			select {
-			case imagesToSave <- scrapedImage:
+			case imagesToSave <- ScrapedFile:
 			case <-ctx.Done():
 				fmt.Printf("CONTEXT DONE")
 				return
@@ -323,12 +323,12 @@ func downloadImages(
 	return imagesToSave, errc
 }
 
-func mergeDownloads(ctx context.Context, channels ...<-chan ScrapedImage) <-chan ScrapedImage {
+func mergeDownloads(ctx context.Context, channels ...<-chan ScrapedFile) <-chan ScrapedFile {
 	var wg sync.WaitGroup
 
 	wg.Add(len(channels))
-	downloadedImages := make(chan ScrapedImage)
-	multiplex := func(c <-chan ScrapedImage) {
+	downloadedImages := make(chan ScrapedFile)
+	multiplex := func(c <-chan ScrapedFile) {
 		defer wg.Done()
 		for i := range c {
 			select {
@@ -351,7 +351,7 @@ func mergeDownloads(ctx context.Context, channels ...<-chan ScrapedImage) <-chan
 
 func saveImages(storage Storage,
 	ctx context.Context,
-	downloadedImages <-chan ScrapedImage) (
+	downloadedImages <-chan ScrapedFile) (
 	<-chan ScreenShot, <-chan error) {
 
 	savedImages := make(chan ScreenShot, 10)

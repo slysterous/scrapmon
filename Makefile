@@ -20,7 +20,7 @@ ci:
 	docker-compose build
 	docker-compose -f docker-compose.yml -f docker-compose.ci.yml up -d --build
 	docker-compose ps
-	docker-compose run print-scrape-ci ./scripts/ci.sh
+	docker-compose run scrapmon-ci ./scripts/ci.sh
 	docker-compose down
 
 run:

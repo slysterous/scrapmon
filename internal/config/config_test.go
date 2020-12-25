@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/slysterous/print-scrape/internal/config"
+	"github.com/slysterous/scrapmon/internal/config"
 )
 
 func TestFromEnv(t *testing.T) {

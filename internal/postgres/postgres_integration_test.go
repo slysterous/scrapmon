@@ -3,9 +3,9 @@
 package postgres_test
 
 import (
-	"github.com/slysterous/print-scrape/internal/postgres"
-	printscrape "github.com/slysterous/print-scrape/internal/printscrape"
-	"github.com/slysterous/print-scrape/internal/test"
+	"github.com/slysterous/scrapmon/internal/postgres"
+	scrapmon "github.com/slysterous/scrapmon/internal/scrapmon"
+	"github.com/slysterous/scrapmon/internal/test"
 	"testing"
 	"time"
 )
@@ -26,7 +26,7 @@ func TestClientCreateScrap(t *testing.T) {
 		DB: db,
 	}
 
-	wantedScrap := printscrape.ScreenShot{
+	wantedScrap := scrapmon.ScreenShot{
 		RefCode:       "00000lHB00",
 		CodeCreatedAt: time.Now(),
 		FileURI:       "fileuri",
@@ -41,3 +41,4 @@ func TestClientCreateScrap(t *testing.T) {
 		t.Errorf("Unexpected scrap id returned")
 	}
 }
+

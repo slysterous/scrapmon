@@ -9,7 +9,7 @@ import (
 
 	"github.com/golang-migrate/migrate"
 	migPostgres "github.com/golang-migrate/migrate/database/postgres"
-	"github.com/slysterous/print-scrape/internal/postgres"
+	"github.com/slysterous/scrapmon/internal/postgres"
 
 	//Bilateral import
 	_ "github.com/golang-migrate/migrate/source/file"
@@ -51,7 +51,7 @@ func getDataSource() string {
 	pass := getEnv("PRINT_SCRAPE_DB_PASSWORD", "password")
 	host := getEnv("PRINT_SCRAPE_DB_HOST", "127.0.0.1")
 	port := getEnv("PRINT_SCRAPE_DB_PORT", "5432")
-	name := getEnv("DB_NAME", "print-scrape")
+	name := getEnv("DB_NAME", "scrapmon")
 	return "host=" + host + " port=" + port + " user=" + user + " password=" + pass + " dbname=" + name + " sslmode=disable"
 }
 

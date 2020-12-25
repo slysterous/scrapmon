@@ -2,7 +2,7 @@ package cobra
 
 import (
 	"fmt"
-	printscrape "github.com/slysterous/print-scrape/internal/printscrape"
+	scrapmon "github.com/slysterous/scrapmon/internal/scrapmon"
 	"github.com/spf13/cobra"
 	"strconv"
 )
@@ -10,13 +10,13 @@ import (
 // Client is responsible for interacting with cobra.
 type Client struct {
 	rootCmd        *cobra.Command
-	commandManager printscrape.CommandManager
+	commandManager scrapmon.CommandManager
 }
 
 // NewClient constructs a new Client.
-func NewClient(cm printscrape.CommandManager) *Client {
+func NewClient(cm scrapmon.CommandManager) *Client {
 	var rootCmd = &cobra.Command{
-		Use:   "print-scrape",
+		Use:   "scrapmon",
 		Short: "Prntscr Scrapper",
 		Long:  "A highly concurrent PrntScr Scrapper.",
 	}
@@ -47,7 +47,7 @@ func (c Client) Execute() error {
 }
 
 // RegisterStartCommand registers the start command to cobra.
-func (c Client) RegisterStartCommand() {
+func (c Client) RegisterStartCommand( ) {
 	startCommand := &cobra.Command{
 		Use:   "start",
 		Short: "Starts scraping images from imgur",

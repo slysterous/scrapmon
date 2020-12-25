@@ -1,4 +1,4 @@
-module github.com/slysterous/print-scrape
+module github.com/slysterous/scrapmon
 
 go 1.13
 

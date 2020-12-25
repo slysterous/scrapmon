@@ -2,7 +2,7 @@ package file
 
 import (
 	"fmt"
-	printscrape "github.com/slysterous/print-scrape/internal/printscrape"
+	scrapmon "github.com/slysterous/scrapmon/internal/scrapmon"
 	"io/ioutil"
 	"path"
 )
@@ -20,7 +20,7 @@ func NewManager(imageFolder string) *Manager {
 }
 
 // SaveFile saves image bytes to a specified file.
-func (m Manager) SaveFile(src printscrape.ScrapedImage) error {
+func (m Manager) SaveFile(src scrapmon.ScrapedFile) error {
 	//Write the bytes to the file
 	err := ioutil.WriteFile(m.composeFilePath(src.Code, src.Type), src.Data, 0644)
 	if err != nil {
