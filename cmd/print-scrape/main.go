@@ -24,16 +24,14 @@ func main() {
 	conf := config.FromEnv()
 
 	// init database manager
-	pgClient, err := postgres.NewClient(getDataSource(conf), conf.MaxDBConnections)
+	pgClient,err := postgres.NewClient(getDataSource(conf), conf.MaxDBConnections)
 	if err != nil {
 		log.Fatalf("could not connect to DB, err: %v", err)
 	}
+	defer pgClient.DB.Close()
 
 	// init a file manager.
 	fileManager := file.NewManager(conf.ScrapStorageFolder)
-	if err != nil {
-		log.Fatalf("could not get a file manager: %v", err)
-	}
 
 	//combine db and filestorage into generic storage.
 	storage := scrapmon.Storage{
@@ -50,11 +48,18 @@ func main() {
 		Scrapper: scrapper,
 	}
 
-	cobraClient := cobraClient.NewClient(commandManager)
-	cobraClient.RegisterStartCommand()
-	cobraClient.RegisterPurgeCommand()
+	cobraC := cobraClient.NewClient()
 
-	if err := cobraClient.Execute(); err != nil {
+	startCommand,err:=cobraC.NewStartCommand(commandManager.StartCommand)
+	if err!=nil{
+		log.Fatalf("could not register start command, err: %v",err)
+	}
+	purgeCommand:=cobraC.NewPurgeCommand(commandManager.PurgeCommand)
+
+	cobraC.RegisterCommand(startCommand)
+	cobraC.RegisterCommand(purgeCommand)
+
+	if err := cobraC.Execute(); err != nil {
 		log.Fatalf("execution failed, err: %v", err)
 	}
 

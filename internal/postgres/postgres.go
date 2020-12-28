@@ -25,9 +25,8 @@ type scrap struct {
 }
 
 // NewClient returns a postgres database client to interact with.
-func NewClient(dataSource string, maxConnections int) (*Client, error) {
+func NewClient(dataSource string, maxConnections int) (*Client,error) {
 	conn, err := sql.Open("postgres", dataSource)
-	//TODO where is the close???
 	if err != nil {
 		return nil, fmt.Errorf("postgres: connecting to database: %v", err)
 	}
@@ -41,7 +40,8 @@ func NewClient(dataSource string, maxConnections int) (*Client, error) {
 	client := &Client{
 		DB: conn,
 	}
-	return client, nil
+
+	return client,nil
 }
 
 // CreateScrap saves a Scrap's info in the database.

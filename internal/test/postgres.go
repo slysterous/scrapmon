@@ -18,32 +18,41 @@ import (
 // maxConnections defines the max database connections.
 const maxDBConnections = 5
 
-// TearUp sets up the database to be used in testing.
-func TearUp(t *testing.T) *sql.DB {
-	db, err := postgres.NewClient(getDataSource(), maxDBConnections)
+// DBTearUp sets up the database to be used in testing.
+func DBTearUp(t *testing.T) *sql.DB {
+	client,closeFn, err := postgres.NewClient(getDataSource(), maxDBConnections)
 	if err != nil {
 		t.Fatalf("could not connect to dabase: %v", err)
 	}
+	defer closeFn(client.DB)
 
-	err = runMigrations(t, db.DB)
+	err = runMigrations(t, client.DB)
 	if err != nil {
 		t.Fatalf("could not run migrations: %v", err)
 	}
 
-	err = truncateTables(db.DB)
+	err = truncateTables(client.DB)
 	if err != nil {
 		t.Fatalf("could not truncate tables: %v", err)
 	}
 
-	return db.DB
+	return client.DB
 }
 
-// TearDown closes the database connection.
-func TearDown(db io.Closer, t *testing.T) {
+// DBTearDown closes the database connection.
+func DBTearDown(db io.Closer, t *testing.T) {
 	err := db.Close()
 	if err != nil {
 		t.Fatalf("could not close database connection %v", err)
 	}
+}
+
+func FileTearUp(){
+
+}
+
+func FileTearDown(){
+
 }
 
 func getDataSource() string {

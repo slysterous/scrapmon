@@ -1,4 +1,4 @@
-package domain
+package scrapmon
 
 import (
 	"fmt"
@@ -88,6 +88,10 @@ type FileManager interface {
 type Scrapper interface {
 	ScrapeByCode(code string) (ScrapedFile, error)
 }
+
+type StartLogic func (fromCode string, iterations int, workerNumber int)error
+
+type PurgeLogic func () error
 
 // Purge will clear all data saved in files and database
 func (s *Storage) Purge() error {

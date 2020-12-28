@@ -1,7 +1,6 @@
-package domain_test
+package scrapmon_test
 
 import (
-	"github.com/slysterous/scrapmon/internal/mock"
 	scrapmon "github.com/slysterous/scrapmon/internal/scrapmon"
 	"testing"
 	"errors"

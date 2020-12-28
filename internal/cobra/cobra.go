@@ -10,11 +10,10 @@ import (
 // Client is responsible for interacting with cobra.
 type Client struct {
 	rootCmd        *cobra.Command
-	commandManager scrapmon.CommandManager
 }
 
-// NewClient constructs a new Client.
-func NewClient(cm scrapmon.CommandManager) *Client {
+//NewClient constructs a new Client.
+func NewClient() *Client {
 	var rootCmd = &cobra.Command{
 		Use:   "scrapmon",
 		Short: "Prntscr Scrapper",
@@ -22,32 +21,29 @@ func NewClient(cm scrapmon.CommandManager) *Client {
 	}
 	return &Client{
 		rootCmd:        rootCmd,
-		commandManager: cm,
 	}
-
 }
 
-//RegisterPurgeCommand registers the purge command to cobra.
-func (c Client) RegisterPurgeCommand() {
+//NewPurgeCommand creates a new purge command.
+func (c Client) NewPurgeCommand(purgeFn scrapmon.PurgeLogic) *cobra.Command {
 	purgeCommand := &cobra.Command{
 		Use:   "purge",
 		Short: "Purges db and filesystem storage",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return c.commandManager.PurgeCommand()
+			return purgeFn()
 		},
 		SilenceErrors: true,
 	}
-
-	c.rootCmd.AddCommand(purgeCommand)
+	return purgeCommand
 }
 
-// Execute executes the root command.
+//Execute executes the root command.
 func (c Client) Execute() error {
 	return c.rootCmd.Execute()
 }
 
-// RegisterStartCommand registers the start command to cobra.
-func (c Client) RegisterStartCommand( ) {
+//NewStartCommand creates a new start command.
+func (c Client) NewStartCommand(startFn scrapmon.StartLogic) (*cobra.Command,error) {
 	startCommand := &cobra.Command{
 		Use:   "start",
 		Short: "Starts scraping images from imgur",
@@ -65,16 +61,25 @@ func (c Client) RegisterStartCommand( ) {
 			if err != nil {
 				return fmt.Errorf("command validation error, err: %v", err)
 			}
-			return c.commandManager.StartCommand(from, iterations, workersNumber)
+			return startFn(from, iterations, workersNumber)
 		},
 		SilenceErrors: true,
 	}
 	startCommand.Flags().StringP("from", "f", "", "starting imgur image code")
 	startCommand.Flags().StringP("iterations", "i", "", "how many images should be downloaded")
 	startCommand.Flags().StringP("workers", "w", "", "the amount of workers to be utilized for async operations")
-	startCommand.MarkFlagRequired("workers")
-	c.rootCmd.AddCommand(startCommand)
+	err:=startCommand.MarkFlagRequired("workers")
+	if err !=nil{
+		return nil,err
+	}
+	return startCommand,nil
 }
+
+//RegisterCommand registers a command onto the cobra client.
+func (c Client) RegisterCommand(cmd *cobra.Command)() {
+	c.rootCmd.AddCommand(cmd)
+}
+
 
 func handleFromParam(cmd *cobra.Command) (string, error) {
 	fromCode, err := cmd.Flags().GetString("from")

@@ -1,4 +1,4 @@
-package domain
+package scrapmon
 
 import (
 	"context"
@@ -8,6 +8,7 @@ import (
 	"time"
 )
 
+// imgur.com/abcdef.png
 // StartCommand is what happens when the command is executed.
 func (cm CommandManager) StartCommand(fromCode string, iterations int, workerNumber int) error {
 	// mark the start time

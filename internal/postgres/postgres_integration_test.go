@@ -19,8 +19,8 @@ func TestNewClientError(t *testing.T) {
 }
 
 func TestClientCreateScrap(t *testing.T) {
-	db := test.TearUp(t)
-	defer test.TearDown(db, t)
+	db := test.DBTearUp(t)
+	defer test.DBTearDown(db, t)
 
 	client := postgres.Client{
 		DB: db,
