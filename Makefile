@@ -27,6 +27,9 @@ run:
 	docker-compose down
 	docker-compose up -d --build
 
+gen:
+	go generate ./...
+
 run-fast:
 	docker-compose down
 	docker-compose up -d

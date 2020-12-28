@@ -1,150 +1,79 @@
 package scrapmon_test
 
 import (
-	scrapmon "github.com/slysterous/scrapmon/internal/scrapmon"
+	"github.com/golang/mock/gomock"
+	"github.com/slysterous/scrapmon/internal/scrapmon"
+	scrapmon_mock "github.com/slysterous/scrapmon/internal/scrapmon/mock"
 	"testing"
 	"errors"
 )
 
 func TestStoragePurge(t *testing.T) {
 	t.Run("Success",func(t *testing.T) {
-		mockPurger:=mock.Purger{
-			PurgeFn: func() error {
-				return nil
-			},
-		}
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
 
-		mockFm:=mock.FileManager{
-			Purger:        mockPurger,
-		}
+		mockFm:=scrapmon_mock.NewMockFileManager(mockCtrl)
+		mockDm:=scrapmon_mock.NewMockDatabaseManager(mockCtrl)
 
-		mockDm:=mock.DatabaseManager{
-			Purger:        mockPurger,
-		}
 		storage:= scrapmon.Storage{
 			Fm: mockFm,
 			Dm: mockDm,
 		}
+
+		mockFm.EXPECT().Purge().Return(nil).Times(1)
+		mockDm.EXPECT().Purge().Return(nil).Times(1)
+
 		err := storage.Purge()
 		if err !=nil {
 			t.Errorf("unexpected error occured, err: %v",err)
 		}
 	})
 	t.Run("Failure on Database", func(t *testing.T) {
-		dbPurger:=mock.Purger{
-			PurgeFn: func() error {
-				return errors.New("test DB error")
-			},
-		}
-		fmPurger:=mock.Purger{
-			PurgeFn: func() error {
-				return errors.New("test FM error")
-			},
-		}
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
 
-		mockFm:=mock.FileManager{
-			Purger:        fmPurger,
-		}
+		mockFm:=scrapmon_mock.NewMockFileManager(mockCtrl)
+		mockDm:=scrapmon_mock.NewMockDatabaseManager(mockCtrl)
 
-		mockDm:=mock.DatabaseManager{
-			Purger:        dbPurger,
-		}
 		storage:= scrapmon.Storage{
 			Fm: mockFm,
 			Dm: mockDm,
 		}
+
+		mockDm.EXPECT().Purge().Return(errors.New("error from database manager")).Times(1)
+
 		err := storage.Purge()
 		if err ==nil {
 			t.Error("expected error got nil",err)
 		}
-		if err.Error()!="test DB error" {
-			t.Errorf("wanted: test DB error got: %v",err)
+		if err.Error()!="error from database manager" {
+			t.Errorf("wanted: error from database manager, got: %v",err)
 		}
 
 	})
 	t.Run("Failure on FileStorage", func(t *testing.T) {
-		dbPurger:=mock.Purger{
-			PurgeFn: func() error {
-				return nil
-			},
-		}
-		fmPurger:=mock.Purger{
-			PurgeFn: func() error {
-				return errors.New("test FM error")
-			},
-		}
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
 
-		mockFm:=mock.FileManager{
-			Purger:        fmPurger,
-		}
+		mockFm:=scrapmon_mock.NewMockFileManager(mockCtrl)
+		mockDm:=scrapmon_mock.NewMockDatabaseManager(mockCtrl)
 
-		mockDm:=mock.DatabaseManager{
-			Purger:        dbPurger,
-		}
 		storage:= scrapmon.Storage{
 			Fm: mockFm,
 			Dm: mockDm,
 		}
+
+		mockDm.EXPECT().Purge().Return(nil).Times(1)
+		mockFm.EXPECT().Purge().Return(errors.New("error from file manager"))
+
 		err := storage.Purge()
 		if err ==nil {
 			t.Fatal("expected error got nil",err)
 		}
-		if err.Error()!="test FM error" {
-			t.Errorf("wanted: test FM error got: %v",err)
+		if err.Error()!="error from file manager" {
+			t.Errorf("wanted: error from file manager, got: %v",err)
 		}
 
-	})
-}
-
-func TestCommandManagerPurge(t *testing.T){
-	t.Run("Success", func(t *testing.T){
-		mockStorage:= scrapmon.Storage{
-			Fm:         mock.FileManager{},
-			Dm:         mock.DatabaseManager{},
-		}
-		mockScrapper:=mock.Scrapper{
-			ScrapeByCodeFn: func(code string) (scrapmon.ScrapedFile, error) {
-				return scrapmon.ScrapedFile{},nil
-			},
-			ScrapeByCodeCalls: 0,
-		}
-		cm:=scrapmon.CommandManager{
-			Storage:  mockStorage,
-			Scrapper: mockScrapper,
-		}
-		err:= cm.PurgeCommand()
-		if err !=nil{
-			t.Errorf("unexpected error occured, err:= %v",err)
-		}
-	})
-	t.Run("Failure", func(t *testing.T){
-		mockStorage := scrapmon.Storage{
-			Fm: mock.FileManager{
-				Purger:        mock.Purger{
-					PurgeFn: func() error {
-						return errors.New("test error from FM Purge")
-					},
-					PurgeCalls: 0,
-				},
-			},
-			Dm: mock.DatabaseManager{},
-		}
-		mockScrapper := mock.Scrapper{
-			ScrapeByCodeFn: func(code string) (scrapmon.ScrapedFile, error) {
-				return scrapmon.ScrapedFile{}, nil
-			},
-			ScrapeByCodeCalls: 0,
-		}
-		cm := scrapmon.CommandManager{
-			Storage:  mockStorage,
-			Scrapper: mockScrapper,
-		}
-		err := cm.PurgeCommand()
-		if err == nil {
-			t.Fatal("expected error got nil")
-		}
-		if err.Error() !="could not purge storage, err: test error from FM Purge"{
-			t.Errorf("wanted: could not purge storage, err: test error from FM Purge, got: %v",err)
-		}
 	})
 }

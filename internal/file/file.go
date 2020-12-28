@@ -7,6 +7,8 @@ import (
 	"path"
 )
 
+//go:generate mockgen -destination mock/file.go -package file_mock . Writer,Purger
+
 // Manager is
 type Manager struct {
 	ScrapFolder string
@@ -27,6 +29,8 @@ type Purger interface {
 func NewManager(imageFolder string,writer Writer,purger Purger) *Manager {
 	return &Manager{
 		ScrapFolder: imageFolder,
+		Writer: writer,
+		Purger: purger,
 	}
 }
 
@@ -51,7 +55,8 @@ func (m Manager) Purge() error {
 		return fmt.Errorf("file: could not read scrap directory, err: %v",err)
 	}
 	for _, d := range dir {
-		err = m.Purger.RemoveAll(path.Join([]string{"tmp", d.Name()}...))
+		a:=path.Join([]string{"tmp", d.Name()}...)
+		err = m.Purger.RemoveAll(a)
 		if err!=nil {
 			return fmt.Errorf("file: could not delete scrap, err: %v",err)
 		}

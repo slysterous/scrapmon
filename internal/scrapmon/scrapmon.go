@@ -5,6 +5,8 @@ import (
 	"time"
 )
 
+//go:generate mockgen -destination mock/scrapmon.go -package scrapmon_mock . DatabaseManager,FileManager,Scrapper
+
 // CustomNumberDigitValues defines the allowed digits of the custom arithmetic system to be used
 //var CustomNumberDigitValues = []rune{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'}
 var CustomNumberDigitValues = []rune{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'}
@@ -93,7 +95,7 @@ type StartLogic func (fromCode string, iterations int, workerNumber int)error
 
 type PurgeLogic func () error
 
-// Purge will clear all data saved in files and database
+//Purge will clear all data saved in files and database
 func (s *Storage) Purge() error {
 	err := s.Dm.Purge()
 	if err != nil {
@@ -106,7 +108,7 @@ func (s *Storage) Purge() error {
 	return nil
 }
 
-// PurgeCommand is what happens when the command is executed.
+//PurgeCommand is what happens when the command is executed.
 func (cm CommandManager) PurgeCommand() error {
 	err := cm.Storage.Purge()
 	if err != nil {

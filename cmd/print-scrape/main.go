@@ -14,19 +14,7 @@ import (
 	"os"
 )
 
-type writer struct{}
-func (w writer)WriteFile(filename string, data []byte, perm os.FileMode) error {
-	return ioutil.WriteFile(filename,data,perm)
-}
 
-type purger struct{}
-func (p purger) ReadDir(dirname string) ([]os.FileInfo, error){
-	return ioutil.ReadDir(dirname)
-}
-
-func (p purger) RemoveAll(path string) error{
-	return os.RemoveAll(path)
-}
 
 func main() {
 
@@ -90,4 +78,18 @@ func getDataSource(cfg scrapmon.Config) string {
 	name := cfg.DatabaseName
 
 	return "host=" + host + " port=" + port + " user=" + user + " password=" + pass + " dbname=" + name + " sslmode=disable"
+}
+
+type writer struct{}
+func (w writer)WriteFile(filename string, data []byte, perm os.FileMode) error {
+	return ioutil.WriteFile(filename,data,perm)
+}
+
+type purger struct{}
+func (p purger) ReadDir(dirname string) ([]os.FileInfo, error){
+	return ioutil.ReadDir(dirname)
+}
+
+func (p purger) RemoveAll(path string) error{
+	return os.RemoveAll(path)
 }
