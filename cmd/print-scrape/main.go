@@ -9,8 +9,24 @@ import (
 	"github.com/slysterous/scrapmon/internal/postgres"
 	scrapmon "github.com/slysterous/scrapmon/internal/scrapmon"
 	config "github.com/slysterous/scrapmon/internal/config"
+	"io/ioutil"
 	"log"
+	"os"
 )
+
+type writer struct{}
+func (w writer)WriteFile(filename string, data []byte, perm os.FileMode) error {
+	return ioutil.WriteFile(filename,data,perm)
+}
+
+type purger struct{}
+func (p purger) ReadDir(dirname string) ([]os.FileInfo, error){
+	return ioutil.ReadDir(dirname)
+}
+
+func (p purger) RemoveAll(path string) error{
+	return os.RemoveAll(path)
+}
 
 func main() {
 
@@ -31,7 +47,7 @@ func main() {
 	defer pgClient.DB.Close()
 
 	// init a file manager.
-	fileManager := file.NewManager(conf.ScrapStorageFolder)
+	fileManager := file.NewManager(conf.ScrapStorageFolder,writer{},purger{})
 
 	//combine db and filestorage into generic storage.
 	storage := scrapmon.Storage{
