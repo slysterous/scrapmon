@@ -88,7 +88,7 @@ type FileManager interface {
 
 // Scrapper defines the scrapping behaviour.
 type Scrapper interface {
-	ScrapeByCode(code string) (ScrapedFile, error)
+	ScrapeByCode(code,ext string) (ScrapedFile, error)
 }
 
 type StartLogic func (fromCode string, iterations int, workerNumber int)error

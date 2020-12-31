@@ -9,8 +9,10 @@ import (
 	"github.com/slysterous/scrapmon/internal/postgres"
 	scrapmon "github.com/slysterous/scrapmon/internal/scrapmon"
 	config "github.com/slysterous/scrapmon/internal/config"
+	"io"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 )
 
@@ -45,7 +47,12 @@ func main() {
 
 	//TODO fix the TOR client
 	//scrapper := phttp.NewProxyChainClient("127.0.0.1", "9050")
-	scrapper := phttp.NewClient()
+	scrapper := phttp.NewClient("https://i.imgur.com/",reader{},&http.Client{
+		Transport:     nil,
+		CheckRedirect: nil,
+		Jar:           nil,
+		Timeout:       0,
+	})
 
 	commandManager := scrapmon.CommandManager{
 		Storage:  storage,
@@ -92,4 +99,9 @@ func (p purger) ReadDir(dirname string) ([]os.FileInfo, error){
 
 func (p purger) RemoveAll(path string) error{
 	return os.RemoveAll(path)
+}
+
+type reader struct{}
+func (r reader) ReadAll(re io.Reader) ([]byte, error){
+	return ioutil.ReadAll(re)
 }

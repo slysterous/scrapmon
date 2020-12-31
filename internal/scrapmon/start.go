@@ -288,7 +288,7 @@ func downloadImages(
 		defer close(errc)
 
 		for image := range pendingImages {
-			ScrapedFile, err := scrapper.ScrapeByCode(image.RefCode)
+			ScrapedFile, err := scrapper.ScrapeByCode(image.RefCode,"png")
 			if err != nil {
 				// Handle an error that occurs during the goroutine.
 				errc <- err
