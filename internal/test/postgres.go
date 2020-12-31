@@ -20,11 +20,11 @@ const maxDBConnections = 5
 
 // DBTearUp sets up the database to be used in testing.
 func DBTearUp(t *testing.T) *sql.DB {
-	client,closeFn, err := postgres.NewClient(getDataSource(), maxDBConnections)
+	client, err := postgres.NewClient(getDataSource(), maxDBConnections)
 	if err != nil {
 		t.Fatalf("could not connect to dabase: %v", err)
 	}
-	defer closeFn(client.DB)
+	defer client.DB.Close()
 
 	err = runMigrations(t, client.DB)
 	if err != nil {

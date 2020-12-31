@@ -11,6 +11,9 @@ import (
 
 	//"os"
 )
+
+//go:generate mockgen -destination mock/http.go -package http_mock . Reader,Downloader
+
 type Downloader interface {
 	Get(url string) (resp *http.Response, err error)
 }
@@ -21,16 +24,16 @@ type Reader interface {
 // Client represents an http client.
 type Client struct {
 	baseUrl string
-	Reader Reader
-	Downloader Downloader
+	reader Reader
+	downloader Downloader
 }
 
 // NewClient returns a new http client.
 func NewClient(baseUrl string,reader Reader, downloader Downloader) *Client {
 	return &Client{
 		baseUrl: baseUrl,
-		Reader: reader,
-		Downloader: downloader,
+		reader: reader,
+		downloader: downloader,
 	}
 }
 
@@ -39,7 +42,7 @@ func (c Client) ScrapeByCode(code, ext string) (scrapmon.ScrapedFile, error) {
 	url := c.baseUrl + code + "." + ext
 
 	//Get the response bytes from the url
-	response, err := c.Downloader.Get(url)
+	response, err := c.downloader.Get(url)
 	if err != nil {
 		fmt.Printf("http: could not download image stream for url: %s, error %v \n", url, err)
 		return scrapmon.ScrapedFile{}, fmt.Errorf("http: could not download image stream for url: %s, error %v", url, err)

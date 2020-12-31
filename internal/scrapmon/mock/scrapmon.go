@@ -195,16 +195,16 @@ func (m *MockScrapper) EXPECT() *MockScrapperMockRecorder {
 }
 
 // ScrapeByCode mocks base method
-func (m *MockScrapper) ScrapeByCode(arg0 string) (scrapmon.ScrapedFile, error) {
+func (m *MockScrapper) ScrapeByCode(arg0, arg1 string) (scrapmon.ScrapedFile, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ScrapeByCode", arg0)
+	ret := m.ctrl.Call(m, "ScrapeByCode", arg0, arg1)
 	ret0, _ := ret[0].(scrapmon.ScrapedFile)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ScrapeByCode indicates an expected call of ScrapeByCode
-func (mr *MockScrapperMockRecorder) ScrapeByCode(arg0 interface{}) *gomock.Call {
+func (mr *MockScrapperMockRecorder) ScrapeByCode(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ScrapeByCode", reflect.TypeOf((*MockScrapper)(nil).ScrapeByCode), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ScrapeByCode", reflect.TypeOf((*MockScrapper)(nil).ScrapeByCode), arg0, arg1)
 }
