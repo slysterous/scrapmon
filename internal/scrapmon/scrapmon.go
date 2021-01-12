@@ -48,6 +48,9 @@ type Storage struct {
 type CommandManager struct {
 	Storage  Storage
 	Scrapper Scrapper
+	CodeProducer CodeProducer
+	FileDownloader FileDownloader
+
 }
 
 // Scrap defines a scrapped Scrap.
@@ -89,6 +92,15 @@ type FileManager interface {
 // Scrapper defines the scrapping behaviour.
 type Scrapper interface {
 	ScrapeByCode(code,ext string) (ScrapedFile, error)
+}
+
+type CodeProducer interface{
+	Produce()
+}
+
+type FileDownloader interface {
+	FetchData()
+	SaveFile()
 }
 
 type StartLogic func (fromCode string, iterations int, workerNumber int)error

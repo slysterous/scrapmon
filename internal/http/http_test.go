@@ -91,8 +91,4 @@ func TestScrapeByCode(t *testing.T){
 			t.Errorf("expected code to be empty string got: %s",file.Code)
 		}
 	})
-	t.Run("Read Response Error",func(t *testing.T){
-		mockCtrl := gomock.NewController(t)
-		defer mockCtrl.Finish()
-	})
 }

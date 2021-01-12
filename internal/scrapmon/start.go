@@ -8,6 +8,26 @@ import (
 	"time"
 )
 
+type ConcurrentCodeProducer interface {
+	ProduceCodes(
+		ctx context.Context,
+		index customNumber.Number,
+		iterations int,
+		channelSize int,
+	) (<-chan string, chan struct{})
+	FilterCodes(
+		ctx context.Context,
+		storage Storage,
+		codes <-chan string,
+		produceMoreCodes chan<- struct{},
+		channelSize int,
+	) (<-chan string, <-chan error)
+}
+
+type ConcurrentFileDownloader interface {
+
+}
+
 // imgur.com/abcdef.png
 // StartCommand is what happens when the command is executed.
 func (cm CommandManager) StartCommand(fromCode string, iterations int, workerNumber int) error {
