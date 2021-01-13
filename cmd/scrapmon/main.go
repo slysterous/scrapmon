@@ -54,9 +54,10 @@ func main() {
 		Timeout:       0,
 	})
 
-	commandManager := scrapmon.CommandManager{
+	commandManager := scrapmon.ConcurrentCommandManager{
 		Storage:  storage,
 		Scrapper: scrapper,
+		CodeAuthority:  scrapmon.CodeAuthority{}
 	}
 
 	cobraC := cobraClient.NewClient()
@@ -65,6 +66,7 @@ func main() {
 	if err!=nil{
 		log.Fatalf("could not register start command, err: %v",err)
 	}
+	
 	purgeCommand:=cobraC.NewPurgeCommand(commandManager.PurgeCommand)
 
 	cobraC.RegisterCommand(startCommand)

@@ -44,14 +44,14 @@ type Storage struct {
 	Dm DatabaseManager
 }
 
-// CommandManager handles commands.
-type CommandManager struct {
+// ConcurrentCommandManager handles commands.
+type ConcurrentCommandManager struct {
 	Storage  Storage
 	Scrapper Scrapper
-	CodeProducer CodeProducer
-	FileDownloader FileDownloader
-
+	CodeProducer ConcurrentCodeProducer
+	FileDownloader ConcurrentDownloader
 }
+
 
 // Scrap defines a scrapped Scrap.
 type Scrap struct {
@@ -62,6 +62,7 @@ type Scrap struct {
 	Status        ScrapStatus
 }
 
+// ScrapedFile describes the scraped file and its properties.
 type ScrapedFile struct {
 	Code string
 	Data []byte
@@ -94,17 +95,11 @@ type Scrapper interface {
 	ScrapeByCode(code,ext string) (ScrapedFile, error)
 }
 
-type CodeProducer interface{
-	Produce()
-}
 
-type FileDownloader interface {
-	FetchData()
-	SaveFile()
-}
-
+// StartLogic describes how a StartLogic function should be described.
 type StartLogic func (fromCode string, iterations int, workerNumber int)error
 
+// PurgeLogic describes how a PurgeLogic function should be described.
 type PurgeLogic func () error
 
 //Purge will clear all data saved in files and database
@@ -121,8 +116,8 @@ func (s *Storage) Purge() error {
 }
 
 //PurgeCommand is what happens when the command is executed.
-func (cm CommandManager) PurgeCommand() error {
-	err := cm.Storage.Purge()
+func (ccm ConcurrentCommandManager) PurgeCommand() error {
+	err := ccm.Storage.Purge()
 	if err != nil {
 		return fmt.Errorf("could not purge storage, err: %v", err)
 	}

@@ -8,35 +8,31 @@ import (
 	"time"
 )
 
-type ConcurrentCodeProducer interface {
-	ProduceCodes(
-		ctx context.Context,
-		index customNumber.Number,
-		iterations int,
-		channelSize int,
-	) (<-chan string, chan struct{})
-	FilterCodes(
+// ConcurrentDownloader describes the actions of a file downloader
+type ConcurrentDownloader interface {
+	DownloadFiles(
 		ctx context.Context,
 		storage Storage,
-		codes <-chan string,
+		scrapper Scrapper,
+		pendingFiles <-chan Scrap,
 		produceMoreCodes chan<- struct{},
-		channelSize int,
-	) (<-chan string, <-chan error)
+	) (<-chan ScrapedFile, <-chan error)
+	SaveFiles(storage Storage,
+		ctx context.Context,
+		downloadedImages <-chan ScrapedFile) (
+		<-chan Scrap, <-chan error)
 }
 
-type ConcurrentFileDownloader interface {
-
-}
 
 // imgur.com/abcdef.png
 // StartCommand is what happens when the command is executed.
-func (cm CommandManager) StartCommand(fromCode string, iterations int, workerNumber int) error {
+func (ccm ConcurrentCommandManager) StartCommand(fromCode string, iterations int, workerNumber int) error {
 	// mark the start time
 	start := time.Now()
 
 	// if no code was provided, then we resume from the last created code or from the beginning.
 	if fromCode == "" {
-		lastCode, err := cm.Storage.Dm.GetLatestCreatedScrapCode()
+		lastCode, err := ccm.Storage.Dm.GetLatestCreatedScrapCode()
 		if err != nil {
 			return fmt.Errorf("could not get latest image code, err: %v", err)
 		}
@@ -58,14 +54,14 @@ func (cm CommandManager) StartCommand(fromCode string, iterations int, workerNum
 
 	// produce codes in a channel and expose a produceMoreCodes channel to enable
 	// a feedback loop
-	codes, produceMoreCodes := produceCodes(ctx, index, iterations, workerNumber)
+	codes, produceMoreCodes := ccm.CodeProducer.Produce(ctx, index, iterations, workerNumber)
 
 	// filter out codes if they already exist in the DB.
-	filteredCodes, filterErrors := filterCodes(ctx, cm.Storage, codes, produceMoreCodes, workerNumber)
+	filteredCodes, filterErrors := ccm.CodeProducer.Filter(ctx, ccm.Storage, codes, produceMoreCodes, workerNumber)
 	errcList = append(errcList, filterErrors)
 
 	// generate image entries on db and mark them as pending
-	pendingImages, pendingErrors := generatePendingImages(ctx, cm.Storage, filteredCodes)
+	pendingFiles, pendingErrors := generatependingFiles(ctx, ccm.Storage, filteredCodes)
 	errcList = append(errcList, pendingErrors)
 
 	// initialize an empty pool of workers
@@ -74,7 +70,7 @@ func (cm CommandManager) StartCommand(fromCode string, iterations int, workerNum
 
 	// start workers
 	for i := 0; i < workerNumber; i++ {
-		downloadWorkers[i], downloadWorkerErrors = downloadImages(ctx, cm.Storage, cm.Scrapper, pendingImages, produceMoreCodes)
+		downloadWorkers[i], downloadWorkerErrors = downloadImages(ctx, cm.Storage, cm.Scrapper, pendingFiles, produceMoreCodes)
 		errcList = append(errcList, downloadWorkerErrors)
 	}
 
@@ -164,43 +160,7 @@ func produceCodes(
 	iterations int,
 	channelSize int,
 ) (<-chan string, chan struct{}) {
-	produceMoreCodes := make(chan struct{}, iterations+1)
-	codes := make(chan string, iterations+1)
-	iterationsCounter := 0
-	fmt.Printf("PRODUCING CODES")
-	go func() {
-		defer close(codes)
-		defer close(produceMoreCodes)
 
-		for {
-			if iterationsCounter < iterations {
-				produceMoreCodes <- struct{}{}
-				iterationsCounter++
-			}
-			fmt.Println("IM HERE")
-
-			select {
-			case <-produceMoreCodes:
-				fmt.Printf("iterationsCounter: %d  iterations: %d\n", iterationsCounter, iterations)
-				//fmt.Printf("PRODUCING CODE: %s \n", index.SmartString())
-			codesFor:
-				for {
-					select {
-					case codes <- index.String():
-						index.Increment()
-						break codesFor
-					case <-time.After(1 * time.Second):
-						fmt.Println("DEADLOCK TIMEOUT PRODUCE CODES")
-						break
-					}
-				}
-			case <-ctx.Done():
-				fmt.Printf("CONTEXT DONE on produce codes")
-				return
-			}
-		}
-	}()
-	return codes, produceMoreCodes
 }
 
 func filterCodes(
@@ -253,17 +213,17 @@ func filterCodes(
 	return filteredCodes, errc
 }
 
-func generatePendingImages(
+func generatependingFiles(
 	ctx context.Context,
 	storage Storage,
 	filteredCodes <-chan string,
 ) (<-chan Scrap, <-chan error) {
 
-	pendingImages := make(chan Scrap, 10)
+	pendingFiles := make(chan Scrap, 10)
 	errc := make(chan error, 1)
 
 	go func() {
-		defer close(pendingImages)
+		defer close(pendingFiles)
 		defer close(errc)
 
 		for code := range filteredCodes {
@@ -282,21 +242,21 @@ func generatePendingImages(
 			}
 
 			select {
-			case pendingImages <- pendingImage:
+			case pendingFiles <- pendingImage:
 			case <-ctx.Done():
 				fmt.Printf("CONTEXT DONE")
 				return
 			}
 		}
 	}()
-	return pendingImages, errc
+	return pendingFiles, errc
 }
 
 func downloadImages(
 	ctx context.Context,
 	storage Storage,
 	scrapper Scrapper,
-	pendingImages <-chan Scrap,
+	pendingFiles <-chan Scrap,
 	produceMoreCodes chan<- struct{},
 ) (<-chan ScrapedFile, <-chan error) {
 
@@ -307,7 +267,7 @@ func downloadImages(
 		defer close(imagesToSave)
 		defer close(errc)
 
-		for image := range pendingImages {
+		for image := range pendingFiles {
 			ScrapedFile, err := scrapper.ScrapeByCode(image.RefCode,"png")
 			if err != nil {
 				// Handle an error that occurs during the goroutine.
