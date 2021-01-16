@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/slysterous/scrapmon/internal/scrapmon"
-
 	//"os"
 )
 
@@ -21,18 +20,19 @@ type Downloader interface {
 type Reader interface {
 	ReadAll(r io.Reader) ([]byte, error)
 }
+
 // Client represents an http client.
 type Client struct {
-	baseUrl string
-	reader Reader
+	baseUrl    string
+	reader     Reader
 	downloader Downloader
 }
 
 // NewClient returns a new http client.
-func NewClient(baseUrl string,reader Reader, downloader Downloader) *Client {
+func NewClient(baseUrl string, reader Reader, downloader Downloader) *Client {
 	return &Client{
-		baseUrl: baseUrl,
-		reader: reader,
+		baseUrl:    baseUrl,
+		reader:     reader,
 		downloader: downloader,
 	}
 }

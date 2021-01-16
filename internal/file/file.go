@@ -12,8 +12,8 @@ import (
 // Manager is
 type Manager struct {
 	ScrapFolder string
-	Writer Writer
-	Purger Purger
+	Writer      Writer
+	Purger      Purger
 }
 
 type Writer interface {
@@ -26,11 +26,11 @@ type Purger interface {
 }
 
 // NewManager constructs a new file manager.
-func NewManager(imageFolder string,writer Writer,purger Purger) *Manager {
+func NewManager(imageFolder string, writer Writer, purger Purger) *Manager {
 	return &Manager{
 		ScrapFolder: imageFolder,
-		Writer: writer,
-		Purger: purger,
+		Writer:      writer,
+		Purger:      purger,
 	}
 }
 
@@ -51,14 +51,14 @@ func (m Manager) composeFilePath(code, ext string) string {
 // Purge deletes every file from the file system
 func (m Manager) Purge() error {
 	dir, err := m.Purger.ReadDir(m.ScrapFolder)
-	if err !=nil {
-		return fmt.Errorf("file: could not read scrap directory, err: %v",err)
+	if err != nil {
+		return fmt.Errorf("file: could not read scrap directory, err: %v", err)
 	}
 	for _, d := range dir {
-		a:=path.Join([]string{"tmp", d.Name()}...)
+		a := path.Join([]string{"tmp", d.Name()}...)
 		err = m.Purger.RemoveAll(a)
-		if err!=nil {
-			return fmt.Errorf("file: could not delete scrap, err: %v",err)
+		if err != nil {
+			return fmt.Errorf("file: could not delete scrap, err: %v", err)
 		}
 	}
 	return nil

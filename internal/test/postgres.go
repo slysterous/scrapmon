@@ -47,11 +47,11 @@ func DBTearDown(db io.Closer, t *testing.T) {
 	}
 }
 
-func FileTearUp(){
+func FileTearUp() {
 
 }
 
-func FileTearDown(){
+func FileTearDown() {
 
 }
 

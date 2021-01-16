@@ -14,6 +14,7 @@ require (
 	github.com/docker/go-units v0.4.0 // indirect
 	github.com/gogo/protobuf v1.3.1 // indirect
 	github.com/golang-migrate/migrate v3.5.4+incompatible
+	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
 	github.com/golang/mock v1.4.4
 	github.com/google/go-cmp v0.4.0 // indirect
 	github.com/google/uuid v1.1.1
@@ -27,7 +28,7 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/robertkrimen/otto v0.0.0-20191219234010-c382bd3c16ff
 	github.com/rs/zerolog v1.19.0 // indirect
-	github.com/sirupsen/logrus v1.4.2 // indirect
+	github.com/sirupsen/logrus v1.4.2
 	github.com/slysterous/custom-number v0.0.0-20201103185958-85f1b5ec8d17
 	github.com/spf13/cobra v1.0.0
 	github.com/stretchr/testify v1.4.0 // indirect

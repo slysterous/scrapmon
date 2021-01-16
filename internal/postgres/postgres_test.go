@@ -42,7 +42,7 @@ func TestGetLatestCreatedScrapCode(t *testing.T) {
 			t.Fatalf("expected: %s, got: %s", want, *got)
 		}
 	})
-	t.Run("Error", func (t *testing.T){
+	t.Run("Error", func(t *testing.T) {
 		db, mock, closeDB := sqlMockNew(t)
 
 		defer closeDB(db)
@@ -67,7 +67,7 @@ func TestGetLatestCreatedScrapCode(t *testing.T) {
 			t.Fatalf("expected: nil, got: %s", *got)
 		}
 	})
-	t.Run("No Codes", func (t *testing.T){
+	t.Run("No Codes", func(t *testing.T) {
 		db, mock, closeDB := sqlMockNew(t)
 
 		defer closeDB(db)
@@ -90,7 +90,7 @@ func TestGetLatestCreatedScrapCode(t *testing.T) {
 			t.Fatalf("there were unfulfilled expectations: %v", err)
 		}
 
-		if got !=nil {
+		if got != nil {
 			t.Fatalf("expected: nil, got: %s", *got)
 		}
 	})
@@ -264,7 +264,7 @@ func TestUpdateScrapStatusByCode(t *testing.T) {
 }
 
 func TestUpdateScrapByCode(t *testing.T) {
-	t.Run("Success", func(t *testing.T){
+	t.Run("Success", func(t *testing.T) {
 		db, mock, closeDB := sqlMockNew(t)
 
 		defer closeDB(db)
@@ -272,9 +272,9 @@ func TestUpdateScrapByCode(t *testing.T) {
 		client := postgres.Client{DB: db}
 
 		want := scrapmon.Scrap{
-			FileURI:       "testfile",
-			RefCode:       "testcode",
-			Status: scrapmon.StatusFailure,
+			FileURI: "testfile",
+			RefCode: "testcode",
+			Status:  scrapmon.StatusFailure,
 		}
 
 		const query = "UPDATE Scraps SET fileUri= .*,downloadStatus= .* WHERE refCode = .*;"
@@ -285,7 +285,7 @@ func TestUpdateScrapByCode(t *testing.T) {
 			t.Fatalf("expected nil, got: %v", err)
 		}
 	})
-	t.Run("Error", func(t *testing.T){
+	t.Run("Error", func(t *testing.T) {
 		db, mock, closeDB := sqlMockNew(t)
 
 		defer closeDB(db)
@@ -293,9 +293,9 @@ func TestUpdateScrapByCode(t *testing.T) {
 		client := postgres.Client{DB: db}
 
 		want := scrapmon.Scrap{
-			FileURI:       "testfile",
-			RefCode:       "testcode",
-			Status: scrapmon.StatusFailure,
+			FileURI: "testfile",
+			RefCode: "testcode",
+			Status:  scrapmon.StatusFailure,
 		}
 
 		const query = "UPDATE Scraps SET fileUri= .*,downloadStatus= .* WHERE refCode = .*;"

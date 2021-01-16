@@ -8,22 +8,6 @@ import (
 	"time"
 )
 
-// ConcurrentDownloader describes the actions of a file downloader
-type ConcurrentDownloader interface {
-	DownloadFiles(
-		ctx context.Context,
-		storage Storage,
-		scrapper Scrapper,
-		pendingFiles <-chan Scrap,
-		produceMoreCodes chan<- struct{},
-	) (<-chan ScrapedFile, <-chan error)
-	SaveFiles(storage Storage,
-		ctx context.Context,
-		downloadedImages <-chan ScrapedFile) (
-		<-chan Scrap, <-chan error)
-}
-
-
 // imgur.com/abcdef.png
 // StartCommand is what happens when the command is executed.
 func (ccm ConcurrentCommandManager) StartCommand(fromCode string, iterations int, workerNumber int) error {
@@ -153,66 +137,6 @@ func mergeErrors(cs ...<-chan error) <-chan error {
 	return out
 }
 
-// produceCodes generates and feeds the pipeline with codes.
-func produceCodes(
-	ctx context.Context,
-	index customNumber.Number,
-	iterations int,
-	channelSize int,
-) (<-chan string, chan struct{}) {
-
-}
-
-func filterCodes(
-	ctx context.Context,
-	storage Storage,
-	codes <-chan string,
-	produceMoreCodes chan<- struct{},
-	channelSize int,
-) (<-chan string, <-chan error) {
-
-	filteredCodes := make(chan string, channelSize)
-	errc := make(chan error, 1)
-
-	go func() {
-		defer close(filteredCodes)
-		defer close(errc)
-
-		for code := range codes {
-			exists, err := storage.Dm.CodeAlreadyExists(code)
-			if err != nil {
-				// Handle an error that occurs during the goroutine.
-				errc <- err
-				return
-			}
-			if exists {
-
-			for1:
-				for {
-					select {
-					case produceMoreCodes <- struct{}{}:
-						break for1
-					case <-time.After(1 * time.Second):
-						fmt.Println("DEADLOCK TIMEOUT PRODUCE MORE CODES")
-						break
-					}
-				}
-				fmt.Printf("Image %s already exists, asking for another code.\n", code)
-				continue
-			}
-			fmt.Printf("Image %s does not exist, image will be downloaded.\n", code)
-
-			select {
-			case filteredCodes <- code:
-			case <-ctx.Done():
-				fmt.Printf("CONTEXT DONE")
-				return
-			}
-		}
-	}()
-	return filteredCodes, errc
-}
-
 func generatependingFiles(
 	ctx context.Context,
 	storage Storage,
@@ -252,57 +176,6 @@ func generatependingFiles(
 	return pendingFiles, errc
 }
 
-func downloadImages(
-	ctx context.Context,
-	storage Storage,
-	scrapper Scrapper,
-	pendingFiles <-chan Scrap,
-	produceMoreCodes chan<- struct{},
-) (<-chan ScrapedFile, <-chan error) {
-
-	imagesToSave := make(chan ScrapedFile, 10)
-	errc := make(chan error, 1)
-
-	go func() {
-		defer close(imagesToSave)
-		defer close(errc)
-
-		for image := range pendingFiles {
-			ScrapedFile, err := scrapper.ScrapeByCode(image.RefCode,"png")
-			if err != nil {
-				// Handle an error that occurs during the goroutine.
-				errc <- err
-				return
-			}
-			//If the image was not found then we need a new code
-			if ScrapedFile.Data == nil && err == nil {
-				fmt.Printf("Image %s was not found, requesting a new one! \n", image.RefCode)
-				err = storage.Dm.UpdateScrapStatusByCode(image.RefCode, StatusNotFound)
-				if err != nil {
-					errc <- err
-					return
-				}
-				produceMoreCodes <- struct{}{}
-				continue
-			}
-			err = storage.Dm.UpdateScrapStatusByCode(image.RefCode, StatusOngoing)
-			if err != nil {
-				errc <- err
-				return
-			}
-
-			select {
-			case imagesToSave <- ScrapedFile:
-			case <-ctx.Done():
-				fmt.Printf("CONTEXT DONE")
-				return
-			}
-		}
-
-	}()
-	return imagesToSave, errc
-}
-
 func mergeDownloads(ctx context.Context, channels ...<-chan ScrapedFile) <-chan ScrapedFile {
 	var wg sync.WaitGroup
 
@@ -327,46 +200,6 @@ func mergeDownloads(ctx context.Context, channels ...<-chan ScrapedFile) <-chan 
 		wg.Wait()
 	}()
 	return downloadedImages
-}
-
-func saveImages(storage Storage,
-	ctx context.Context,
-	downloadedImages <-chan ScrapedFile) (
-	<-chan Scrap, <-chan error) {
-
-	savedImages := make(chan Scrap, 10)
-	errc := make(chan error, 1)
-
-	go func() {
-		defer close(savedImages)
-		defer close(errc)
-
-		for image := range downloadedImages {
-			err := storage.Fm.SaveFile(image)
-			if err != nil {
-				errc <- err
-				return
-			}
-
-			ss := Scrap{
-				RefCode: image.Code,
-				Status:  StatusSuccess,
-				FileURI: "SOMEWHERE" + image.Code + "." + image.Type,
-			}
-			err = storage.Dm.UpdateScrapByCode(ss)
-			if err != nil {
-				errc <- err
-				return
-			}
-			select {
-			case savedImages <- ss:
-			case <-ctx.Done():
-				fmt.Printf("CONTEXT DONE")
-				return
-			}
-		}
-	}()
-	return savedImages, errc
 }
 
 func mergeSaves(ctx context.Context, channels ...<-chan Scrap) <-chan Scrap {

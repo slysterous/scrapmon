@@ -25,16 +25,16 @@ const (
 
 // Config represents the applications configuration parameters
 type Config struct {
-	Env                     string
-	DatabaseUser            string
-	DatabasePassword        string
-	DatabaseHost            string
-	DatabasePort            string
-	DatabaseName            string
-	HTTPClientTimeout       int
-	MaxDBConnections        int
-	TorHost                 string
-	TorPort                 string
+	Env                string
+	DatabaseUser       string
+	DatabasePassword   string
+	DatabaseHost       string
+	DatabasePort       string
+	DatabaseName       string
+	HTTPClientTimeout  int
+	MaxDBConnections   int
+	TorHost            string
+	TorPort            string
 	ScrapStorageFolder string
 }
 
@@ -46,12 +46,11 @@ type Storage struct {
 
 // ConcurrentCommandManager handles commands.
 type ConcurrentCommandManager struct {
-	Storage  Storage
-	Scrapper Scrapper
-	CodeProducer ConcurrentCodeProducer
+	Storage        Storage
+	Scrapper       Scrapper
+	CodeProducer   ConcurrentCodeProducer
 	FileDownloader ConcurrentDownloader
 }
-
 
 // Scrap defines a scrapped Scrap.
 type Scrap struct {
@@ -67,6 +66,14 @@ type ScrapedFile struct {
 	Code string
 	Data []byte
 	Type string
+}
+
+type Logger interface {
+	Debug()
+	Verbose()
+	Info()
+	Warn()
+	Error()
 }
 
 // Purger defines the purging behaviour.
@@ -92,15 +99,14 @@ type FileManager interface {
 
 // Scrapper defines the scrapping behaviour.
 type Scrapper interface {
-	ScrapeByCode(code,ext string) (ScrapedFile, error)
+	ScrapeByCode(code, ext string) (ScrapedFile, error)
 }
 
-
 // StartLogic describes how a StartLogic function should be described.
-type StartLogic func (fromCode string, iterations int, workerNumber int)error
+type StartLogic func(fromCode string, iterations int, workerNumber int) error
 
 // PurgeLogic describes how a PurgeLogic function should be described.
-type PurgeLogic func () error
+type PurgeLogic func() error
 
 //Purge will clear all data saved in files and database
 func (s *Storage) Purge() error {

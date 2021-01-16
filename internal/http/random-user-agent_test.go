@@ -9,11 +9,11 @@ import (
 
 func TestGenerateRandomUserAgent(t *testing.T) {
 	for i := 0; i < 10; i++ {
-		ua:=http.GenerateRandomUserAgent()
+		ua := http.GenerateRandomUserAgent()
 		r, _ := regexp.Compile(".+?[/\\s][\\d.]+")
-		isUserAgent:=r.MatchString(ua)
+		isUserAgent := r.MatchString(ua)
 		if !isUserAgent {
-			t.Errorf("expected valid user agent, got: %s",ua)
+			t.Errorf("expected valid user agent, got: %s", ua)
 		}
 	}
 }

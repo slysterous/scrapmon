@@ -11,15 +11,15 @@ import (
 	httpMock "github.com/slysterous/scrapmon/internal/http/mock"
 )
 
-func TestScrapeByCode(t *testing.T){
-	t.Run("Success", func (t *testing.T){
+func TestScrapeByCode(t *testing.T) {
+	t.Run("Success", func(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
-		mockDownloader:=httpMock.NewMockDownloader(mockCtrl)
-		mockReader:=httpMock.NewMockReader(mockCtrl)
+		mockDownloader := httpMock.NewMockDownloader(mockCtrl)
+		mockReader := httpMock.NewMockReader(mockCtrl)
 
-		scrapper:=shttp.NewClient("baseball/",mockReader,mockDownloader)
+		scrapper := shttp.NewClient("baseball/", mockReader, mockDownloader)
 
 		mockDownloader.EXPECT().Get("baseball/file.png").Return(&http.Response{
 			Status:           "",
@@ -36,36 +36,36 @@ func TestScrapeByCode(t *testing.T){
 			Trailer:          nil,
 			Request:          nil,
 			TLS:              nil,
-		},nil).Times(1)
-		_,err:=scrapper.ScrapeByCode("file","png")
-		if err !=nil{
-			t.Errorf("unexpected error occured, err:%v",err)
+		}, nil).Times(1)
+		_, err := scrapper.ScrapeByCode("file", "png")
+		if err != nil {
+			t.Errorf("unexpected error occured, err:%v", err)
 		}
 	})
-	t.Run("Get Error", func(t *testing.T){
+	t.Run("Get Error", func(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
-		mockDownloader:=httpMock.NewMockDownloader(mockCtrl)
-		mockReader:=httpMock.NewMockReader(mockCtrl)
+		mockDownloader := httpMock.NewMockDownloader(mockCtrl)
+		mockReader := httpMock.NewMockReader(mockCtrl)
 
-		scrapper:=shttp.NewClient("baseball/",mockReader,mockDownloader)
+		scrapper := shttp.NewClient("baseball/", mockReader, mockDownloader)
 
-		mockDownloader.EXPECT().Get("baseball/file.png").Return(nil,errors.New("test error")).Times(1)
-		_,err:=scrapper.ScrapeByCode("file","png")
-		if err ==nil{
+		mockDownloader.EXPECT().Get("baseball/file.png").Return(nil, errors.New("test error")).Times(1)
+		_, err := scrapper.ScrapeByCode("file", "png")
+		if err == nil {
 			t.Errorf("expected error got nil")
 		}
 
 	})
-	t.Run("Not Found or Removed", func(t *testing.T){
+	t.Run("Not Found or Removed", func(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
-		mockDownloader:=httpMock.NewMockDownloader(mockCtrl)
-		mockReader:=httpMock.NewMockReader(mockCtrl)
+		mockDownloader := httpMock.NewMockDownloader(mockCtrl)
+		mockReader := httpMock.NewMockReader(mockCtrl)
 
-		scrapper:=shttp.NewClient("baseball/",mockReader,mockDownloader)
+		scrapper := shttp.NewClient("baseball/", mockReader, mockDownloader)
 
 		mockDownloader.EXPECT().Get("baseball/file.png").Return(&http.Response{
 			Status:           "",
@@ -82,13 +82,13 @@ func TestScrapeByCode(t *testing.T){
 			Trailer:          nil,
 			Request:          nil,
 			TLS:              nil,
-		},nil).Times(1)
-		file,err:=scrapper.ScrapeByCode("file","png")
-		if err !=nil{
-			t.Errorf("unexpected error occured, err:%v",err)
+		}, nil).Times(1)
+		file, err := scrapper.ScrapeByCode("file", "png")
+		if err != nil {
+			t.Errorf("unexpected error occured, err:%v", err)
 		}
-		if file.Code!=""{
-			t.Errorf("expected code to be empty string got: %s",file.Code)
+		if file.Code != "" {
+			t.Errorf("expected code to be empty string got: %s", file.Code)
 		}
 	})
 }

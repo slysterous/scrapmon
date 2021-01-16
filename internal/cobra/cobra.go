@@ -9,7 +9,7 @@ import (
 
 // Client is responsible for interacting with cobra.
 type Client struct {
-	rootCmd        *cobra.Command
+	rootCmd *cobra.Command
 }
 
 //NewClient constructs a new Client.
@@ -20,7 +20,7 @@ func NewClient() *Client {
 		Long:  "A highly concurrent PrntScr Scrapper.",
 	}
 	return &Client{
-		rootCmd:        rootCmd,
+		rootCmd: rootCmd,
 	}
 }
 
@@ -43,7 +43,7 @@ func (c Client) Execute() error {
 }
 
 //NewStartCommand creates a new start command.
-func (c Client) NewStartCommand(startFn scrapmon.StartLogic) (*cobra.Command,error) {
+func (c Client) NewStartCommand(startFn scrapmon.StartLogic) (*cobra.Command, error) {
 	startCommand := &cobra.Command{
 		Use:   "start",
 		Short: "Starts scraping images from imgur",
@@ -68,18 +68,17 @@ func (c Client) NewStartCommand(startFn scrapmon.StartLogic) (*cobra.Command,err
 	startCommand.Flags().StringP("from", "f", "", "starting imgur image code")
 	startCommand.Flags().StringP("iterations", "i", "", "how many images should be downloaded")
 	startCommand.Flags().StringP("workers", "w", "", "the amount of workers to be utilized for async operations")
-	err:=startCommand.MarkFlagRequired("workers")
-	if err !=nil{
-		return nil,err
+	err := startCommand.MarkFlagRequired("workers")
+	if err != nil {
+		return nil, err
 	}
-	return startCommand,nil
+	return startCommand, nil
 }
 
 //RegisterCommand registers a command onto the cobra client.
-func (c Client) RegisterCommand(cmd *cobra.Command)() {
+func (c Client) RegisterCommand(cmd *cobra.Command) {
 	c.rootCmd.AddCommand(cmd)
 }
-
 
 func handleFromParam(cmd *cobra.Command) (string, error) {
 	fromCode, err := cmd.Flags().GetString("from")

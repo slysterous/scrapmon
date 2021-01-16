@@ -11,15 +11,15 @@ import (
 // FromEnv returns the apps configuration based on environmental variables including sane defaults.
 func FromEnv() scrapmon.Config {
 	return scrapmon.Config{
-		DatabaseHost:            getString("SCRAPMON_DB_HOST", "127.0.0.1"),
-		DatabaseName:            getString("SCRAPMON_DB_NAME", "scrapmon"),
-		DatabasePort:            getString("SCRAPMON_DB_PORT", "5432"),
-		DatabaseUser:            getString("SCRAPMON_DB_USER", "postgres"),
-		DatabasePassword:        getString("SCRAPMON_DB_PASSWORD", "password"),
-		MaxDBConnections:        getInt("MAX_DB_CONNECTIONS", 100),
-		Env:                     getString("SCRAPMON_ENV", "dev"),
-		TorHost:                 getString("TOR_HOST", "127.0.0.1"),
-		TorPort:                 getString("TOR_PORT", "9050"),
+		DatabaseHost:       getString("SCRAPMON_DB_HOST", "127.0.0.1"),
+		DatabaseName:       getString("SCRAPMON_DB_NAME", "scrapmon"),
+		DatabasePort:       getString("SCRAPMON_DB_PORT", "5432"),
+		DatabaseUser:       getString("SCRAPMON_DB_USER", "postgres"),
+		DatabasePassword:   getString("SCRAPMON_DB_PASSWORD", "password"),
+		MaxDBConnections:   getInt("MAX_DB_CONNECTIONS", 100),
+		Env:                getString("SCRAPMON_ENV", "dev"),
+		TorHost:            getString("TOR_HOST", "127.0.0.1"),
+		TorPort:            getString("TOR_PORT", "9050"),
 		ScrapStorageFolder: getString("SCRAPMON_IMAGE_FOLDER", "./"),
 	}
 }
