@@ -10,6 +10,6 @@ CREATE TABLE IF NOT EXISTS scraps
     codeCreatedAt TIMESTAMP NOT NULL,
     fileUri VARCHAR,
     downloadStatus status DEFAULT 'pending',
-    CONSTRAINT screenshots_refCode_unique UNIQUE(refCode),
-    CONSTRAINT screenshots_uuid_unique UNIQUE(uuid)
+    CONSTRAINT scraps_refCode_unique UNIQUE(refCode),
+    CONSTRAINT scraps_uuid_unique UNIQUE(uuid)
 );

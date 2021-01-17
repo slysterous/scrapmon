@@ -1,5 +1,12 @@
 package scrapmon
 
+import (
+	"context"
+	"fmt"
+
+	"github.com/slysterous/scrapmon/internal/log"
+)
+
 // ConcurrentDownloader describes the actions of a file downloader
 type ConcurrentDownloader interface {
 	DownloadFiles(
@@ -15,7 +22,12 @@ type ConcurrentDownloader interface {
 		<-chan Scrap, <-chan error)
 }
 
-func (cd ConcurrentDownloader) DownloadFiles(
+// ConcurrentScrapper is responsible for code creation and handling.
+type ConcurrentScrapper struct {
+	Logger log.Logger
+}
+
+func (cd ConcurrentScrapper) DownloadFiles(
 	ctx context.Context,
 	storage Storage,
 	scrapper Scrapper,
@@ -66,7 +78,7 @@ func (cd ConcurrentDownloader) DownloadFiles(
 	return imagesToSave, errc
 }
 
-func (cd ConcurrentDownloader) SaveFiles(
+func (cd ConcurrentScrapper) SaveFiles(
 	storage Storage,
 	ctx context.Context,
 	downloadedImages <-chan ScrapedFile) (

@@ -4,19 +4,17 @@ import (
 	"fmt"
 	"github.com/joho/godotenv"
 	cobraClient "github.com/slysterous/scrapmon/internal/cobra"
+	config "github.com/slysterous/scrapmon/internal/config"
 	file "github.com/slysterous/scrapmon/internal/file"
 	phttp "github.com/slysterous/scrapmon/internal/http"
 	"github.com/slysterous/scrapmon/internal/postgres"
 	scrapmon "github.com/slysterous/scrapmon/internal/scrapmon"
-	config "github.com/slysterous/scrapmon/internal/config"
 	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 )
-
-
 
 func main() {
 
@@ -30,14 +28,14 @@ func main() {
 	conf := config.FromEnv()
 
 	// init database manager
-	pgClient,err := postgres.NewClient(getDataSource(conf), conf.MaxDBConnections)
+	pgClient, err := postgres.NewClient(getDataSource(conf), conf.MaxDBConnections)
 	if err != nil {
 		log.Fatalf("could not connect to DB, err: %v", err)
 	}
 	defer pgClient.DB.Close()
 
 	// init a file manager.
-	fileManager := file.NewManager(conf.ScrapStorageFolder,writer{},purger{})
+	fileManager := file.NewManager(conf.ScrapStorageFolder, writer{}, purger{})
 
 	//combine db and filestorage into generic storage.
 	storage := scrapmon.Storage{
@@ -47,7 +45,7 @@ func main() {
 
 	//TODO fix the TOR client
 	//scrapper := phttp.NewProxyChainClient("127.0.0.1", "9050")
-	scrapper := phttp.NewClient("https://i.imgur.com/",reader{},&http.Client{
+	scrapper := phttp.NewClient("https://i.imgur.com/", reader{}, &http.Client{
 		Transport:     nil,
 		CheckRedirect: nil,
 		Jar:           nil,
@@ -55,19 +53,19 @@ func main() {
 	})
 
 	commandManager := scrapmon.ConcurrentCommandManager{
-		Storage:  storage,
-		Scrapper: scrapper,
-		CodeAuthority:  scrapmon.CodeAuthority{}
+		Storage:       storage,
+		Scrapper:      scrapper,
+		CodeAuthority: scrapmon.ConcurrentCodeAuthority{},
 	}
 
 	cobraC := cobraClient.NewClient()
 
-	startCommand,err:=cobraC.NewStartCommand(commandManager.StartCommand)
-	if err!=nil{
-		log.Fatalf("could not register start command, err: %v",err)
+	startCommand, err := cobraC.NewStartCommand(commandManager.StartCommand)
+	if err != nil {
+		log.Fatalf("could not register start command, err: %v", err)
 	}
-	
-	purgeCommand:=cobraC.NewPurgeCommand(commandManager.PurgeCommand)
+
+	purgeCommand := cobraC.NewPurgeCommand(commandManager.PurgeCommand)
 
 	cobraC.RegisterCommand(startCommand)
 	cobraC.RegisterCommand(purgeCommand)
@@ -90,20 +88,23 @@ func getDataSource(cfg scrapmon.Config) string {
 }
 
 type writer struct{}
-func (w writer)WriteFile(filename string, data []byte, perm os.FileMode) error {
-	return ioutil.WriteFile(filename,data,perm)
+
+func (w writer) WriteFile(filename string, data []byte, perm os.FileMode) error {
+	return ioutil.WriteFile(filename, data, perm)
 }
 
 type purger struct{}
-func (p purger) ReadDir(dirname string) ([]os.FileInfo, error){
+
+func (p purger) ReadDir(dirname string) ([]os.FileInfo, error) {
 	return ioutil.ReadDir(dirname)
 }
 
-func (p purger) RemoveAll(path string) error{
+func (p purger) RemoveAll(path string) error {
 	return os.RemoveAll(path)
 }
 
 type reader struct{}
-func (r reader) ReadAll(re io.Reader) ([]byte, error){
+
+func (r reader) ReadAll(re io.Reader) ([]byte, error) {
 	return ioutil.ReadAll(re)
 }

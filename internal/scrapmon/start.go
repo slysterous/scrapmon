@@ -38,10 +38,10 @@ func (ccm ConcurrentCommandManager) StartCommand(fromCode string, iterations int
 
 	// produce codes in a channel and expose a produceMoreCodes channel to enable
 	// a feedback loop
-	codes, produceMoreCodes := ccm.CodeProducer.Produce(ctx, index, iterations, workerNumber)
+	codes, produceMoreCodes := ccm.CodeAuthority.Produce(ctx, index, iterations, workerNumber)
 
 	// filter out codes if they already exist in the DB.
-	filteredCodes, filterErrors := ccm.CodeProducer.Filter(ctx, ccm.Storage, codes, produceMoreCodes, workerNumber)
+	filteredCodes, filterErrors := ccm.CodeAuthority.Filter(ctx, ccm.Storage, codes, produceMoreCodes, workerNumber)
 	errcList = append(errcList, filterErrors)
 
 	// generate image entries on db and mark them as pending
@@ -54,7 +54,7 @@ func (ccm ConcurrentCommandManager) StartCommand(fromCode string, iterations int
 
 	// start workers
 	for i := 0; i < workerNumber; i++ {
-		downloadWorkers[i], downloadWorkerErrors = downloadImages(ctx, cm.Storage, cm.Scrapper, pendingFiles, produceMoreCodes)
+		downloadWorkers[i], downloadWorkerErrors = ccm.FileScrapper.DownloadFiles(ctx, ccm.Storage, ccm.Scrapper, pendingFiles, produceMoreCodes)
 		errcList = append(errcList, downloadWorkerErrors)
 	}
 
@@ -67,7 +67,7 @@ func (ccm ConcurrentCommandManager) StartCommand(fromCode string, iterations int
 
 	// start workers
 	for i := 0; i < workerNumber; i++ {
-		saveWorkers[i], saveWorkersErrors = saveImages(cm.Storage, ctx, downloadedImages)
+		saveWorkers[i], saveWorkersErrors = ccm.FileScrapper.SaveFiles(ccm.Storage, ctx, downloadedImages)
 		errcList = append(errcList, saveWorkersErrors)
 	}
 

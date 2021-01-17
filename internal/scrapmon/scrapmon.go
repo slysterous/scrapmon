@@ -46,10 +46,10 @@ type Storage struct {
 
 // ConcurrentCommandManager handles commands.
 type ConcurrentCommandManager struct {
-	Storage        Storage
-	Scrapper       Scrapper
-	CodeProducer   ConcurrentCodeProducer
-	FileDownloader ConcurrentDownloader
+	Storage       Storage
+	Scrapper      Scrapper
+	CodeAuthority ConcurrentCodeProducer
+	FileScrapper  ConcurrentDownloader
 }
 
 // Scrap defines a scrapped Scrap.
@@ -69,11 +69,11 @@ type ScrapedFile struct {
 }
 
 type Logger interface {
-	Debug()
-	Verbose()
-	Info()
-	Warn()
-	Error()
+	Debugf(format string, args ...interface{})
+	Infof(format string, args ...interface{})
+	Warnf(format string, args ...interface{})
+	Errorf(format string, args ...interface{})
+	SetLevel(level uint32)
 }
 
 // Purger defines the purging behaviour.

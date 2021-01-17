@@ -2,9 +2,14 @@ package scrapmon
 
 import (
 	"context"
-	customNumber "github.com/slysterous/custom-number"
 	"time"
+
+	customNumber "github.com/slysterous/custom-number"
+
+	"github.com/slysterous/scrapmon/internal/log"
 )
+
+//go:generate mockgen -destination mock/codeproducer.go -package scrapmon_mock . ConcurrentCodeProducer
 
 // ConcurrentCodeProducer describes the actions of a code producer.
 type ConcurrentCodeProducer interface {
@@ -24,7 +29,9 @@ type ConcurrentCodeProducer interface {
 }
 
 // ConcurrentCodeAuthority is responsible for code creation and handling.
-type ConcurrentCodeAuthority struct {}
+type ConcurrentCodeAuthority struct {
+	Logger log.Logger
+}
 
 // Produce produces codes in a channel while handling feedback.
 func (cca ConcurrentCodeAuthority) Produce(
@@ -32,11 +39,11 @@ func (cca ConcurrentCodeAuthority) Produce(
 	index customNumber.Number,
 	iterations int,
 	channelSize int,
-) (<-chan string, chan struct{}){
+) (<-chan string, chan struct{}) {
 	produceMoreCodes := make(chan struct{}, iterations+1)
 	codes := make(chan string, iterations+1)
 	iterationsCounter := 0
-	//fmt.Printf("PRODUCING CODES")
+	cca.Logger.Infof("Initializing Code Production...!")
 	go func() {
 		defer close(codes)
 		defer close(produceMoreCodes)
@@ -46,12 +53,11 @@ func (cca ConcurrentCodeAuthority) Produce(
 				produceMoreCodes <- struct{}{}
 				iterationsCounter++
 			}
-			//fmt.Println("IM HERE")
 
 			select {
 			case <-produceMoreCodes:
-				//fmt.Printf("iterationsCounter: %d  iterations: %d\n", iterationsCounter, iterations)
-				//fmt.Printf("PRODUCING CODE: %s \n", index.SmartString())
+				cca.Logger.Debugf("Iterations Counter: %d, Desired Iterations: %d\n", iterationsCounter, iterations)
+				cca.Logger.Debugf("Producing Code: %s\n", index.String())
 			codesFor:
 				for {
 					select {
@@ -59,12 +65,12 @@ func (cca ConcurrentCodeAuthority) Produce(
 						index.Increment()
 						break codesFor
 					case <-time.After(1 * time.Second):
-						//fmt.Println("DEADLOCK TIMEOUT PRODUCE CODES")
+						cca.Logger.Warnf("Deadlock Timeout on PRODUCE_CODES!")
 						break
 					}
 				}
 			case <-ctx.Done():
-				//fmt.Printf("CONTEXT DONE on produce codes")
+				cca.Logger.Debugf("Finished producing Codes!\n")
 				return
 			}
 		}
@@ -80,45 +86,45 @@ func (cca ConcurrentCodeAuthority) Filter(
 	produceMoreCodes chan<- struct{},
 	channelSize int,
 ) (<-chan string, <-chan error) {
-		filteredCodes := make(chan string, channelSize)
-		errc := make(chan error, 1)
-	
-		go func() {
-			defer close(filteredCodes)
-			defer close(errc)
-	
-			for code := range codes {
-				exists, err := storage.Dm.CodeAlreadyExists(code)
-				if err != nil {
-					// Handle an error that occurs during the goroutine.
-					errc <- err
-					return
-				}
-				if exists {
-	
-				for1:
-					for {
-						select {
-						case produceMoreCodes <- struct{}{}:
-							break for1
-						case <-time.After(1 * time.Second):
-							//fmt.Println("DEADLOCK TIMEOUT PRODUCE MORE CODES")
-							break
-						}
-					}
-					//fmt.Printf("Image %s already exists, asking for another code.\n", code)
-					continue
-				}
-				//fmt.Printf("Image %s does not exist, image will be downloaded.\n", code)
-	
-				select {
-				case filteredCodes <- code:
-				case <-ctx.Done():
-					//fmt.Printf("CONTEXT DONE")
-					return
-				}
+	filteredCodes := make(chan string, channelSize)
+	errc := make(chan error, 1)
+
+	go func() {
+		defer close(filteredCodes)
+		defer close(errc)
+
+		for code := range codes {
+			exists, err := storage.Dm.CodeAlreadyExists(code)
+			if err != nil {
+				// Handle an error that occurs during the goroutine.
+				errc <- err
+				return
 			}
-		}()
-		return filteredCodes, errc
-	}
+			if exists {
+				//if code exists then
+			moreCodes:
+				for { //keep trying to add an item in produceMoreCodes
+					select {
+					case produceMoreCodes <- struct{}{}:
+						cca.Logger.Debugf("File with code %s already exists, asking for another code\n", code)
+						break moreCodes
+					case <-time.After(1 * time.Second):
+						// If it takes more than 1 second then keep trying
+						cca.Logger.Warnf("Deadlock Timeout on FILTER_CODES!")
+						break
+					}
+				}
+				continue
+			}
+			cca.Logger.Debugf("File with code %s does not exist, will be downloaded\n", code)
+
+			select {
+			case filteredCodes <- code:
+			case <-ctx.Done():
+				cca.Logger.Debugf("Finished Filtering Codes!\n")
+				return
+			}
+		}
+	}()
+	return filteredCodes, errc
 }

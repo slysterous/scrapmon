@@ -1,1 +1,1 @@
-DROP TABLE IF EXISTS screenshots;
+DROP TABLE IF EXISTS scraps;
