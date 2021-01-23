@@ -7,7 +7,9 @@ import (
 	"github.com/slysterous/scrapmon/internal/log"
 )
 
-// ConcurrentDownloader describes the actions of a file downloader
+//go:generate mockgen -destination mock/codeproducer.go -package scrapmon_mock . ConcurrentDownloader
+
+// ConcurrentDownloader describes the actions of a file downloader.
 type ConcurrentDownloader interface {
 	DownloadFiles(
 		ctx context.Context,
@@ -49,9 +51,9 @@ func (cd ConcurrentScrapper) DownloadFiles(
 				errc <- err
 				return
 			}
-			//If the image was not found then we need a new code
-			if ScrapedFile.Data == nil && err == nil {
-				fmt.Printf("Image %s was not found, requesting a new one! \n", image.RefCode)
+			//If the image was not found then we need a new code.
+			if ScrapedFile.Data == nil {
+				cd.Logger.Infof("File %s was not found, requesting a new one! \n", image.RefCode)
 				err = storage.Dm.UpdateScrapStatusByCode(image.RefCode, StatusNotFound)
 				if err != nil {
 					errc <- err
@@ -69,7 +71,7 @@ func (cd ConcurrentScrapper) DownloadFiles(
 			select {
 			case imagesToSave <- ScrapedFile:
 			case <-ctx.Done():
-				fmt.Printf("CONTEXT DONE")
+				cd.Logger.Debugf("Finished downloading Files!\n")
 				return
 			}
 		}

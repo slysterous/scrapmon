@@ -64,6 +64,7 @@ func (c Client) ScrapeByCode(code, ext string) (scrapmon.ScrapedFile, error) {
 	contentType := response.Header.Get("Content-Type")
 	imageType := strings.TrimLeft(contentType, "image/")
 
+	//TODO should i keep this?
 	if imageType == "f" {
 		imageType = "gif"
 	}

@@ -24,7 +24,7 @@ func DBTearUp(t *testing.T) *sql.DB {
 	if err != nil {
 		t.Fatalf("could not connect to dabase: %v", err)
 	}
-	defer client.DB.Close()
+	//defer client.DB.Close()
 
 	err = runMigrations(t, client.DB)
 	if err != nil {
@@ -45,14 +45,6 @@ func DBTearDown(db io.Closer, t *testing.T) {
 	if err != nil {
 		t.Fatalf("could not close database connection %v", err)
 	}
-}
-
-func FileTearUp() {
-
-}
-
-func FileTearDown() {
-
 }
 
 func getDataSource() string {

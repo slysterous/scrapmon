@@ -300,13 +300,14 @@ func TestFilterCodes(t *testing.T) {
 		}
 
 		unfilteredCodes := make(chan string, 5)
-		defer close(unfilteredCodes)
+
 		produceMoreCodes := make(chan struct{}, 5)
 		defer close(produceMoreCodes)
 		wantCodes := []string{"aa", "ab", "ac", "ad", "ae"}
 
 		go func(wantCodes []string) {
 			// async feed codes
+			defer close(unfilteredCodes)
 			for _, code := range wantCodes {
 				mockDM.EXPECT().CodeAlreadyExists(code).Return(false, nil).Times(1)
 				mockLogger.EXPECT().Debugf("File with code %s does not exist, will be downloaded\n", code).Times(1)
