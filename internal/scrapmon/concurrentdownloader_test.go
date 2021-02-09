@@ -2,6 +2,8 @@ package scrapmon_test
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"reflect"
 	"testing"
 	"time"
@@ -18,7 +20,7 @@ func TestDownloadFiles(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
-		wantFiles:=[]scrapmon.ScrapedFile{
+		wantFiles := []scrapmon.ScrapedFile{
 			{
 				Code: "a",
 				Data: []byte{},
@@ -26,17 +28,17 @@ func TestDownloadFiles(t *testing.T) {
 			},
 			{
 				Code: "b",
-				Data:  []byte{},
+				Data: []byte{},
 				Type: "png",
 			},
 			{
 				Code: "c",
-				Data:  []byte{},
+				Data: []byte{},
 				Type: "png",
 			},
 			{
 				Code: "d",
-				Data:  []byte{},
+				Data: []byte{},
 				Type: "png",
 			},
 		}
@@ -94,16 +96,14 @@ func TestDownloadFiles(t *testing.T) {
 		pendingFiles := make(chan scrapmon.Scrap, 5)
 		produceMoreCodes := make(chan struct{}, 5)
 
-
-
 		//feed codes
 		for _, file := range filesToDownload {
 			mockScrapper.EXPECT().ScrapeByCode(file.RefCode, "png").Return(scrapmon.ScrapedFile{
 				Code: file.RefCode,
 				Data: []byte{},
 				Type: "png",
-			},nil).Times(1)
-			mockDM.EXPECT().UpdateScrapStatusByCode(file.RefCode,scrapmon.StatusOngoing).Return(nil).Times(1)
+			}, nil).Times(1)
+			mockDM.EXPECT().UpdateScrapStatusByCode(file.RefCode, scrapmon.StatusOngoing).Return(nil).Times(1)
 			pendingFiles <- file
 		}
 
@@ -111,7 +111,7 @@ func TestDownloadFiles(t *testing.T) {
 
 		var downloadedFiles []scrapmon.ScrapedFile
 
-		for downloadedFile:=range filesC {
+		for downloadedFile := range filesC {
 			counter++
 			downloadedFiles = append(downloadedFiles, downloadedFile)
 
@@ -127,32 +127,9 @@ func TestDownloadFiles(t *testing.T) {
 		}
 
 	})
-	t.Run("Failure with produceMoreCodes", func(t *testing.T) {
+	t.Run("Success with not found", func(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
-
-		wantFiles:=[]scrapmon.ScrapedFile{
-			{
-				Code: "a",
-				Data: []byte{},
-				Type: "png",
-			},
-			{
-				Code: "b",
-				Data:  []byte{},
-				Type: "png",
-			},
-			{
-				Code: "c",
-				Data:  []byte{},
-				Type: "png",
-			},
-			{
-				Code: "d",
-				Data:  []byte{},
-				Type: "png",
-			},
-		}
 
 		counter := 0
 		mockLogger := log_mock.NewMockLogger(mockCtrl)
@@ -176,7 +153,7 @@ func TestDownloadFiles(t *testing.T) {
 		pendingFiles := make(chan scrapmon.Scrap, 5)
 		produceMoreCodes := make(chan struct{}, 5)
 
-		scrap:=scrapmon.Scrap{
+		scrap := scrapmon.Scrap{
 			ID:            1,
 			RefCode:       "a",
 			CodeCreatedAt: time.Now(),
@@ -184,34 +161,320 @@ func TestDownloadFiles(t *testing.T) {
 			Status:        scrapmon.StatusPending,
 		}
 
-		mockScrapper.EXPECT().ScrapeByCode(scrap.RefCode, scrap.FileURI).Return(scrapmon.ScrapedFile{
+		mockScrapper.EXPECT().ScrapeByCode(scrap.RefCode, "png").Return(scrapmon.ScrapedFile{
 			Code: "a",
 			Data: nil,
 			Type: "png",
-		},nil).Times(1)
-		mockDM.EXPECT().UpdateScrapStatusByCode("a",scrapmon.StatusNotFound).Return(nil).Times(1)
+		}, nil).Times(1)
+		mockDM.EXPECT().UpdateScrapStatusByCode("a", scrapmon.StatusNotFound).Return(nil).Times(1)
+		mockLogger.EXPECT().Infof("File %s was not found, requesting a new one!\n", "a")
+
 		pendingFiles <- scrap
 
+		cd.DownloadFiles(ctx, mockStorage, mockScrapper, pendingFiles, produceMoreCodes)
 
-		filesC, _ := cd.DownloadFiles(ctx, mockStorage, mockScrapper, pendingFiles, produceMoreCodes)
-
-		var downloadedFiles []scrapmon.ScrapedFile
-
-		for downloadedFile:=range filesC {
+		for range produceMoreCodes {
 			counter++
-			downloadedFiles = append(downloadedFiles, downloadedFile)
-
-			if counter == 4 {
+			if counter == 1 {
 				cancel()
 				close(pendingFiles)
 				close(produceMoreCodes)
+			} else {
+				t.Error("Expected more codes to be asked exactly once.")
+			}
+		}
+	})
+	t.Run("Failed with not found and requested a new one", func(t *testing.T) {
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+
+		counter := 0
+		mockLogger := log_mock.NewMockLogger(mockCtrl)
+		cd := scrapmon.ConcurrentScrapper{
+			Logger: mockLogger,
+		}
+
+		mockDM := scrapmon_mock.NewMockDatabaseManager(mockCtrl)
+		mockFM := scrapmon_mock.NewMockFileManager(mockCtrl)
+
+		mockStorage := scrapmon.Storage{
+			Fm: mockFM,
+			Dm: mockDM,
+		}
+
+		mockScrapper := scrapmon_mock.NewMockScrapper(mockCtrl)
+
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
+		pendingFiles := make(chan scrapmon.Scrap, 5)
+		produceMoreCodes := make(chan struct{}, 5)
+
+		scrap := scrapmon.Scrap{
+			ID:            1,
+			RefCode:       "a",
+			CodeCreatedAt: time.Now(),
+			FileURI:       "",
+			Status:        scrapmon.StatusPending,
+		}
+
+		mockScrapper.EXPECT().ScrapeByCode(scrap.RefCode, "png").Return(scrapmon.ScrapedFile{
+			Code: "a",
+			Data: nil,
+			Type: "png",
+		}, nil).Times(1)
+		mockDM.EXPECT().UpdateScrapStatusByCode("a", scrapmon.StatusNotFound).Return(nil).Times(1)
+		mockLogger.EXPECT().Infof("File %s was not found, requesting a new one!\n", "a")
+
+		pendingFiles <- scrap
+
+		cd.DownloadFiles(ctx, mockStorage, mockScrapper, pendingFiles, produceMoreCodes)
+
+		for range produceMoreCodes {
+			counter++
+			if counter == 1 {
+				cancel()
+				close(pendingFiles)
+				close(produceMoreCodes)
+			} else {
+				t.Error("Expected more codes to be asked exactly once.")
+			}
+		}
+	})
+	t.Run("Failed with not found and failed to update state to notfound", func(t *testing.T) {
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+
+		counter := 0
+		mockLogger := log_mock.NewMockLogger(mockCtrl)
+		cd := scrapmon.ConcurrentScrapper{
+			Logger: mockLogger,
+		}
+
+		mockDM := scrapmon_mock.NewMockDatabaseManager(mockCtrl)
+		mockFM := scrapmon_mock.NewMockFileManager(mockCtrl)
+
+		mockStorage := scrapmon.Storage{
+			Fm: mockFM,
+			Dm: mockDM,
+		}
+
+		mockScrapper := scrapmon_mock.NewMockScrapper(mockCtrl)
+
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
+		pendingFiles := make(chan scrapmon.Scrap, 5)
+		produceMoreCodes := make(chan struct{}, 5)
+
+		scrap := scrapmon.Scrap{
+			ID:            1,
+			RefCode:       "a",
+			CodeCreatedAt: time.Now(),
+			FileURI:       "",
+			Status:        scrapmon.StatusPending,
+		}
+
+		mockScrapper.EXPECT().ScrapeByCode(scrap.RefCode, "png").Return(scrapmon.ScrapedFile{
+			Code: "a",
+			Data: nil,
+			Type: "png",
+		}, nil).Times(1)
+		mockDM.EXPECT().UpdateScrapStatusByCode("a", scrapmon.StatusNotFound).Return(errors.New("test error")).Times(1)
+		mockLogger.EXPECT().Infof("File %s was not found, requesting a new one!\n", "a")
+
+		pendingFiles <- scrap
+
+		_, errs := cd.DownloadFiles(ctx, mockStorage, mockScrapper, pendingFiles, produceMoreCodes)
+
+		for range errs {
+			counter++
+			if counter == 1 {
+				cancel()
+				close(pendingFiles)
+				close(produceMoreCodes)
+			} else {
+				t.Error("Expected errors to be thrown exactly once.")
 			}
 		}
 
-		if !reflect.DeepEqual(wantFiles, downloadedFiles) {
-			t.Errorf("expected: %v, got: %v", wantFiles, downloadedFiles)
+		for range produceMoreCodes {
+			t.Error("Expected more codes not to be asked.")
+		}
+	})
+	t.Run("Failed to download", func(t *testing.T) {
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+
+		counter := 0
+		mockLogger := log_mock.NewMockLogger(mockCtrl)
+		cd := scrapmon.ConcurrentScrapper{
+			Logger: mockLogger,
+		}
+
+		mockDM := scrapmon_mock.NewMockDatabaseManager(mockCtrl)
+		mockFM := scrapmon_mock.NewMockFileManager(mockCtrl)
+
+		mockStorage := scrapmon.Storage{
+			Fm: mockFM,
+			Dm: mockDM,
+		}
+
+		mockScrapper := scrapmon_mock.NewMockScrapper(mockCtrl)
+
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
+		pendingFiles := make(chan scrapmon.Scrap, 5)
+		produceMoreCodes := make(chan struct{}, 5)
+
+		scrap := scrapmon.Scrap{
+			ID:            1,
+			RefCode:       "a",
+			CodeCreatedAt: time.Now(),
+			FileURI:       "",
+			Status:        scrapmon.StatusPending,
+		}
+
+		mockScrapper.EXPECT().ScrapeByCode(scrap.RefCode, "png").Return(scrapmon.ScrapedFile{}, errors.New("test error")).Times(1)
+
+		pendingFiles <- scrap
+
+		_, errC := cd.DownloadFiles(ctx, mockStorage, mockScrapper, pendingFiles, produceMoreCodes)
+
+		for range errC {
+			counter++
+			if counter == 1 {
+				cancel()
+				close(pendingFiles)
+				close(produceMoreCodes)
+			} else {
+				t.Error("Expected errors to be returned exactly once.")
+			}
+		}
+	})
+	t.Run("Failed to update state", func(t *testing.T) {
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+
+		counter := 0
+		mockLogger := log_mock.NewMockLogger(mockCtrl)
+		cd := scrapmon.ConcurrentScrapper{
+			Logger: mockLogger,
+		}
+
+		mockDM := scrapmon_mock.NewMockDatabaseManager(mockCtrl)
+		mockFM := scrapmon_mock.NewMockFileManager(mockCtrl)
+
+		mockStorage := scrapmon.Storage{
+			Fm: mockFM,
+			Dm: mockDM,
+		}
+
+		mockScrapper := scrapmon_mock.NewMockScrapper(mockCtrl)
+
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
+		pendingFiles := make(chan scrapmon.Scrap, 5)
+		produceMoreCodes := make(chan struct{}, 5)
+
+		scrap := scrapmon.Scrap{
+			ID:            1,
+			RefCode:       "a",
+			CodeCreatedAt: time.Now(),
+			FileURI:       "",
+			Status:        scrapmon.StatusPending,
+		}
+
+		mockScrapper.EXPECT().ScrapeByCode(scrap.RefCode, "png").Return(scrapmon.ScrapedFile{Data: []byte{}}, nil).Times(1)
+		mockDM.EXPECT().UpdateScrapStatusByCode("a", scrapmon.StatusOngoing).Return(errors.New("test error")).Times(1)
+		pendingFiles <- scrap
+
+		_, errC := cd.DownloadFiles(ctx, mockStorage, mockScrapper, pendingFiles, produceMoreCodes)
+
+		for err := range errC {
+			counter++
+			fmt.Printf("res: %v\n", err)
+			if counter == 1 {
+				cancel()
+				close(pendingFiles)
+				close(produceMoreCodes)
+			} else {
+				t.Error("Expected errors to be returned exactly once.")
+			}
+		}
+	})
+}
+
+func TestSaveFiles(t *testing.T) {
+	t.Run("Success", func(t *testing.T) {
+		mockCtrl:= gomock.NewController(t)
+		defer mockCtrl.Finish()
+
+		filesToSave := []scrapmon.ScrapedFile{
+			{
+				Code: "a",
+				Data: []byte{},
+				Type: "png",
+			},
+			{
+				Code: "b",
+				Data: []byte{},
+				Type: "png",
+			},
+			{
+				Code: "c",
+				Data: []byte{},
+				Type: "png",
+			},
+			{
+				Code: "d",
+				Data: []byte{},
+				Type: "png",
+			},
+		}
+
+		mockLogger := log_mock.NewMockLogger(mockCtrl)
+		cd := scrapmon.ConcurrentScrapper{
+			Logger: mockLogger,
+		}
+
+		mockDM := scrapmon_mock.NewMockDatabaseManager(mockCtrl)
+		mockFM := scrapmon_mock.NewMockFileManager(mockCtrl)
+
+		mockStorage := scrapmon.Storage{
+			Fm: mockFM,
+			Dm: mockDM,
+		}
+
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
+		filesToSaveCh := make(chan scrapmon.ScrapedFile, 5)
+
+		//feed channel
+		for _, file := range filesToSave {
+			mockFM.EXPECT().SaveFile(file).Return(nil).Times(1)
+			filesToSaveCh <- file
+		}
+
+		scraps, _ := cd.SaveFiles(mockStorage, ctx, filesToSaveCh)
+
+		for scrap:= range scraps {
+			counter++
+			scraps = append(scraps,filesToSave)
+			if counter == 4 {
+				cancel()
+				close(filesToSave)
+			}
 		}
 
 	})
+	t.Run("Failed to save", func(t *testing.T) {
 
+	})
+	t.Run("Failed to update state", func(t *testing.T) {
+
+	})
 }

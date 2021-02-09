@@ -53,7 +53,7 @@ func (cd ConcurrentScrapper) DownloadFiles(
 			}
 			//If the image was not found then we need a new code.
 			if ScrapedFile.Data == nil {
-				cd.Logger.Infof("File %s was not found, requesting a new one! \n", image.RefCode)
+				cd.Logger.Infof("File %s was not found, requesting a new one!\n", image.RefCode)
 				err = storage.Dm.UpdateScrapStatusByCode(image.RefCode, StatusNotFound)
 				if err != nil {
 					errc <- err
