@@ -434,7 +434,7 @@ func TestSaveFiles(t *testing.T) {
 				Type: "png",
 			},
 		}
-
+		counter := 0
 		mockLogger := log_mock.NewMockLogger(mockCtrl)
 		cd := scrapmon.ConcurrentScrapper{
 			Logger: mockLogger,
@@ -452,21 +452,32 @@ func TestSaveFiles(t *testing.T) {
 		defer cancel()
 
 		filesToSaveCh := make(chan scrapmon.ScrapedFile, 5)
-
 		//feed channel
 		for _, file := range filesToSave {
 			mockFM.EXPECT().SaveFile(file).Return(nil).Times(1)
+			scrap:=scrapmon.Scrap{
+				ID: int64(counter),
+				RefCode:       file.Code,
+				CodeCreatedAt: time.Date(1,1,1,1,1,1,1,nil),
+				FileURI:       "SOMEWHERE"+file.Code + ".png",
+				Status:        scrapmon.StatusSuccess,
+			}
+			mockDM.EXPECT().UpdateScrapByCode(scrap).Return(nil).Times(1)
 			filesToSaveCh <- file
+
 		}
 
 		scraps, _ := cd.SaveFiles(mockStorage, ctx, filesToSaveCh)
 
-		for scrap:= range scraps {
+		var downloadedFiles []scrapmon.Scrap
+
+		for scrap := range scraps {
 			counter++
-			scraps = append(scraps,filesToSave)
+			downloadedFiles = append(downloadedFiles, scrap)
+
 			if counter == 4 {
 				cancel()
-				close(filesToSave)
+				close(filesToSaveCh)
 			}
 		}
 
