@@ -1,0 +1,77 @@
+version: "3.3"
+
+services:
+  scrapmon-ci:
+    image: scrapmon-ci
+    build:
+      context: ./
+      dockerfile: ./scripts/Dockerfile
+    container_name: scrapmon-ci
+    environment:
+      SCRAPMON_HTTP_ADDR: ":8080"
+      SCRAPMON_ENV: "prod"
+      SCRAPMON_DB_HOST: "scrapmon-db"
+      SCRAPMON_DB_PORT: "5432"
+      SCRAPMON_DB_USER: "postgres"
+      SCRAPMON_DB_PASSWORD: "password"
+      SCRAPMON_DB_NAME: "scrapmon"
+    networks:
+      - scrapmon-network
+    depends_on:
+      - scrapmon-db
+  tor:
+    image: dperson/torproxy
+    container_name: tor
+    hostname: tor
+    environment:
+      TORUSER: root
+      TOR_NewCircuitPeriod: 5
+      TOR_NumEntryGuards: 8
+    networks:
+      - scrapmon-network
+    ports: 
+      - "8118:8118"
+  scrapmon-db:
+    image: postgres:12.0
+    container_name: scrapmon-db
+    hostname: scrapmon-db
+    environment:
+      POSTGRES_PASSWORD: "password"
+      POSTGRES_DB: "scrapmon"
+      POSTGRES_PORT: "5432"
+    networks:
+      - scrapmon-network
+    ports:
+      - "5432:5432"
+  scrapmon-migrations:
+    build:
+      context: ./
+      dockerfile: ./scripts/Dockerfile.migrations
+    container_name: scrapmon-migrations
+    hostname: scrapmon-migrations
+    environment: 
+      SCRAPMON_DB: scrapmon
+      SCRAPMON_DB_HOST: scrapmon-db
+      SCRAPMON_DB_PORT: 5432
+      SCRAPMON_DB_NAME: scrapmon
+      SCRAPMON_DB_USER: postgres
+      SCRAPMON_DB_PASSWORD: password
+    networks:
+      - scrapmon-network
+    volumes:  
+      - "./internal/migrations/:/migrations"
+      - "${PWD}/scripts/wait-for-postgres.sh:/scripts/wait-for-postgres.sh"
+    #command: ["-path", "/migrations", "-database",  "postgres://postgres:password@scrapmon-db:5432/scrapmon?sslmode=disable", "up", "3"]
+    depends_on:
+      - scrapmon-db
+  # scrapmon-db-check:
+  #   image: jwilder/dockerize
+  #   container_name: scrapmon-db-check
+  #   hostname: scrapmon-db-check
+  #   command: dockerize -wait tcp://scrapmon-db:5432
+  #   networks:
+  #     - scrapmon-network
+  #   depends_on: 
+  #     - scrapmon-db
+networks:
+  scrapmon-network:

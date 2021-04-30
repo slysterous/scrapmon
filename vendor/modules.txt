@@ -1,0 +1,31 @@
+# github.com/DATA-DOG/go-sqlmock v1.4.1
+github.com/DATA-DOG/go-sqlmock
+# github.com/golang-migrate/migrate v3.5.4+incompatible
+github.com/golang-migrate/migrate
+github.com/golang-migrate/migrate/database
+github.com/golang-migrate/migrate/database/postgres
+github.com/golang-migrate/migrate/source
+github.com/golang-migrate/migrate/source/file
+# github.com/golang/mock v1.4.4
+github.com/golang/mock/gomock
+# github.com/google/uuid v1.1.1
+github.com/google/uuid
+# github.com/inconshreveable/mousetrap v1.0.0
+github.com/inconshreveable/mousetrap
+# github.com/joho/godotenv v1.3.0
+github.com/joho/godotenv
+# github.com/lib/pq v1.3.0
+github.com/lib/pq
+github.com/lib/pq/oid
+github.com/lib/pq/scram
+# github.com/sirupsen/logrus v1.7.0
+github.com/sirupsen/logrus
+# github.com/slysterous/custom-number v0.0.0-20201103185958-85f1b5ec8d17
+github.com/slysterous/custom-number
+# github.com/spf13/cobra v1.0.0
+github.com/spf13/cobra
+# github.com/spf13/pflag v1.0.3
+github.com/spf13/pflag
+# golang.org/x/sys v0.0.0-20200323222414-85ca7c5b95cd
+golang.org/x/sys/unix
+golang.org/x/sys/windows
