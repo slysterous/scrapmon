@@ -6,6 +6,12 @@ jobs:
   build:
     docker:
       - image: circleci/golang:1.15
+
+      - image: circleci/postgres:9.6-alpine
+        environment: # envirognment variables for primary container
+          POSTGRES_USER: "postgres"
+          POSTGRES_DB: "scrapmon-db"
+          POSTGRES_PASSWORD: "password"
     working_directory: /go/src/github.com/slysterous/scrapmon
     steps:
       - checkout
