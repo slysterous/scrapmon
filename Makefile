@@ -4,6 +4,7 @@ help:
 	@echo "  lint            use to lint files."
 	@echo "  fmt             use to gofmt all files excluding vendor."
 	@echo "  fmtcheck        use to check gofmt compatibility of files."
+	@echo "  test            use to run tests."
 	@echo "  ci              use to run CI pipeline (via docker)."
 	@echo "  ci-cleanup      use to kill & remove all ci containers."
 	@echo "  run       		 use to run the project locally (via docker).It also executes migrations"
@@ -14,7 +15,8 @@ lint:
 
 fmtcheck:
 	@sh -c "'$(CURDIR)/scripts/gofmtcheck.sh'"
-
+test:
+	go test ./... -race -p 1 -cover -v -tags=integration -mod vendor
 ci:
 	docker-compose down
 	docker-compose build

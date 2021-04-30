@@ -6,12 +6,18 @@ jobs:
   build:
     docker:
       - image: circleci/golang:1.15
-    working_directory: /go/src/github.com/slysterous/numeral
+    working_directory: /go/src/github.com/slysterous/scrapmon
     steps:
       - checkout
+      - run:
+          name: Install Docker Compose
+          command: |
+            curl -L https://github.com/docker/compose/releases/download/1.25.3/docker-compose-`uname -s`-`uname -m` > ~/docker-compose
+            chmod +x ~/docker-compose
+            sudo mv ~/docker-compose /usr/local/bin/docker-compose
+      - setup_remote_docker
       - run: go get golang.org/x/lint/golint
       - run: make fmt
       - run: make ci
-      - run: go test -v -cover -race -coverprofile=coverage.out
       - run: go get github.com/mattn/goveralls
       - run: GO111MODULE=off $GOPATH/bin/goveralls -coverprofile=coverage.out -service=circle-ci -repotoken=$COVERALLS_TOKEN
