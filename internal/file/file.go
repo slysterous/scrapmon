@@ -2,9 +2,10 @@ package file
 
 import (
 	"fmt"
-	scrapmon "github.com/slysterous/scrapmon/internal/scrapmon"
 	"os"
 	"path"
+
+	scrapmon "github.com/slysterous/scrapmon/internal/scrapmon"
 )
 
 //go:generate mockgen -destination mock/file.go -package file_mock . Writer,Purger

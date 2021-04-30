@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"time"
+
 	//pq is the postgres driver for database/sql
 	"github.com/google/uuid"
 	_ "github.com/lib/pq"

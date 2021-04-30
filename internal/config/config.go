@@ -2,10 +2,11 @@ package config
 
 import (
 	"fmt"
-	scrapmon "github.com/slysterous/scrapmon/internal/scrapmon"
 	"log"
 	"os"
 	"strconv"
+
+	scrapmon "github.com/slysterous/scrapmon/internal/scrapmon"
 )
 
 // FromEnv returns the apps configuration based on environmental variables including sane defaults.

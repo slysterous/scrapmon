@@ -409,7 +409,7 @@ func TestDownloadFiles(t *testing.T) {
 
 func TestSaveFiles(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
-		mockCtrl:= gomock.NewController(t)
+		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
 		filesToSave := []scrapmon.ScrapedFile{
@@ -455,25 +455,24 @@ func TestSaveFiles(t *testing.T) {
 		//feed channel
 		for _, file := range filesToSave {
 			mockFM.EXPECT().SaveFile(file).Return(nil).Times(1)
-			scrap:=scrapmon.Scrap{
-				ID: int64(counter),
+			scrap := scrapmon.Scrap{
+				ID:            int64(counter),
 				RefCode:       file.Code,
-				CodeCreatedAt: time.Date(1,1,1,1,1,1,1,nil),
-				FileURI:       "SOMEWHERE"+file.Code + ".png",
+				CodeCreatedAt: time.Date(1, 1, 1, 0, 0, 0, 0, time.UTC),
+				FileURI:       "SOMEWHERE" + file.Code + ".png",
 				Status:        scrapmon.StatusSuccess,
 			}
 			mockDM.EXPECT().UpdateScrapByCode(scrap).Return(nil).Times(1)
 			filesToSaveCh <- file
-
 		}
 
 		scraps, _ := cd.SaveFiles(mockStorage, ctx, filesToSaveCh)
 
-		var downloadedFiles []scrapmon.Scrap
+		var savedFiles []scrapmon.Scrap
 
 		for scrap := range scraps {
 			counter++
-			downloadedFiles = append(downloadedFiles, scrap)
+			savedFiles = append(savedFiles, scrap)
 
 			if counter == 4 {
 				cancel()

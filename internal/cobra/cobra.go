@@ -2,9 +2,10 @@ package cobra
 
 import (
 	"fmt"
+	"strconv"
+
 	scrapmon "github.com/slysterous/scrapmon/internal/scrapmon"
 	"github.com/spf13/cobra"
-	"strconv"
 )
 
 // Client is responsible for interacting with cobra.
