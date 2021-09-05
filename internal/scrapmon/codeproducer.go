@@ -5,8 +5,6 @@ import (
 	"time"
 
 	customNumber "github.com/slysterous/custom-number"
-
-	"github.com/slysterous/scrapmon/internal/log"
 )
 
 //go:generate mockgen -destination mock/codeproducer.go -package scrapmon_mock . ConcurrentCodeProducer
@@ -30,7 +28,7 @@ type ConcurrentCodeProducer interface {
 
 // ConcurrentCodeAuthority is responsible for code creation and handling.
 type ConcurrentCodeAuthority struct {
-	Logger log.Logger
+	Logger Logger
 }
 
 // Produce produces codes in a channel while handling feedback.

@@ -10,7 +10,7 @@ import (
 
 //go:generate mockgen -destination mock/file.go -package file_mock . Writer,Purger
 
-// Manager is
+// Manager is the file manager.
 type Manager struct {
 	ScrapFolder string
 	Writer      Writer

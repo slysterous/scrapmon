@@ -7,6 +7,7 @@ import (
 	config "github.com/slysterous/scrapmon/internal/config"
 	file "github.com/slysterous/scrapmon/internal/file"
 	phttp "github.com/slysterous/scrapmon/internal/http"
+	"github.com/slysterous/scrapmon/internal/logger"
 	"github.com/slysterous/scrapmon/internal/postgres"
 	scrapmon "github.com/slysterous/scrapmon/internal/scrapmon"
 	"io"
@@ -55,7 +56,9 @@ func main() {
 	commandManager := scrapmon.ConcurrentCommandManager{
 		Storage:       storage,
 		Scrapper:      scrapper,
-		CodeAuthority: scrapmon.ConcurrentCodeAuthority{},
+		CodeAuthority: scrapmon.ConcurrentCodeAuthority{
+			Logger: logger.NewLogger(1),
+		},
 	}
 
 	cobraC := cobraClient.NewClient()

@@ -73,7 +73,6 @@ type Logger interface {
 	Infof(format string, args ...interface{})
 	Warnf(format string, args ...interface{})
 	Errorf(format string, args ...interface{})
-	SetLevel(level uint32)
 }
 
 // Purger defines the purging behaviour.

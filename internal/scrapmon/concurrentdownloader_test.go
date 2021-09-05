@@ -10,7 +10,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 
-	log_mock "github.com/slysterous/scrapmon/internal/log/mock"
+	log_mock "github.com/slysterous/scrapmon/internal/logger/mock"
 	"github.com/slysterous/scrapmon/internal/scrapmon"
 	scrapmon_mock "github.com/slysterous/scrapmon/internal/scrapmon/mock"
 )

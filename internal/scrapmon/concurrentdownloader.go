@@ -3,8 +3,6 @@ package scrapmon
 import (
 	"context"
 	"fmt"
-
-	"github.com/slysterous/scrapmon/internal/log"
 )
 
 //go:generate mockgen -destination mock/codeproducer.go -package scrapmon_mock . ConcurrentDownloader
@@ -26,7 +24,7 @@ type ConcurrentDownloader interface {
 
 // ConcurrentScrapper is responsible for code creation and handling.
 type ConcurrentScrapper struct {
-	Logger log.Logger
+	Logger Logger
 }
 
 func (cd ConcurrentScrapper) DownloadFiles(
