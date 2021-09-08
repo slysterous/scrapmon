@@ -20,7 +20,8 @@ test:
 ci:
 	docker-compose down
 	docker-compose build
-	docker-compose -f docker-compose.yml -f docker-compose.ci.yml up -d --build
+	#docker-compose -f docker-compose.yml -f docker-compose.ci.yml up -d --build
+	docker-compose -f docker-compose.yml up -d --build
 	docker-compose ps
 	docker-compose run scrapmon-ci ./scripts/ci.sh
 	docker-compose down
