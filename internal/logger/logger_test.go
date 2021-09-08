@@ -1,10 +1,11 @@
 package logger_test
 
 import (
-	"bufio"
 	"bytes"
+	"fmt"
 	"github.com/golang/mock/gomock"
 	logger "github.com/slysterous/scrapmon/internal/logger"
+	"strings"
 	"testing"
 )
 
@@ -14,15 +15,14 @@ func TestDebugf(t *testing.T){
 		defer mockCtrl.Finish()
 
 		var buf bytes.Buffer
-		wr:=bufio.NewWriter(&buf)
 
-		lg:=logger.NewLogger(1,wr)
+		lg:=logger.NewLogger(1,&buf)
 		lg.Debugf("omg this is a test with param: %s","parameter")
 
 		got := buf.String()
-		want := "omg this is a test with param: parameter"
+		want := fmt.Sprintf(string(logger.ColorBlue)+"omg this is a test with param: %s"+string(logger.ColorReset),"parameter")
 
-		if got != want{
+		if strings.Contains(got,want){
 			t.Errorf("expected: %s, got: %s",want,got)
 		}
 	})
