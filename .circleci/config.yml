@@ -18,6 +18,7 @@ jobs:
       - setup_remote_docker
       - run: go get golang.org/x/lint/golint
       - run: make fmt
+      - run: make migrate
       - run: make ci
       - run: go get github.com/mattn/goveralls
       - run: GO111MODULE=off $GOPATH/bin/goveralls -coverprofile=coverage.out -service=circle-ci -repotoken=$COVERALLS_TOKEN
