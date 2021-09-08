@@ -18,7 +18,7 @@ func TestNewClientError(t *testing.T) {
 	}
 }
 
-func TestClientCreateScrap(t *testing.T) {
+func TestIntegrationClientCreateScrap(t *testing.T) {
 	db := test.DBTearUp(t)
 	defer test.DBTearDown(db, t)
 
