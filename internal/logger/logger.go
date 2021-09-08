@@ -9,10 +9,11 @@ import (
 
 // Possible Scrap Status  values.
 const (
-	DebugLevel uint32 = 1
-	InfoLevel uint32  = 2
-	WarnLevel  uint32 = 3
-	ErrorLevel uint32 = 4
+	TraceLevel uint32 = iota
+	DebugLevel uint32 = iota
+	InfoLevel uint32  = iota
+	WarnLevel  uint32 = iota
+	ErrorLevel uint32 = iota
 )
 
 type color string
@@ -23,6 +24,7 @@ const (
 	ColorGreen color = "\033[32m"
 	ColorYellow color = "\033[33m"
 	ColorBlue color = "\033[34m"
+	ColorCyan color = "\033[36m"
 	ColorWhite color = "\033[37m"
 )
 
@@ -42,30 +44,37 @@ func NewLogger(level uint32,writer io.Writer) Logger {
 func (l Logger) GetLevel() uint32 {
 	return l.level
 }
+
+func (l Logger) Tracef(format string, args ...interface{}){
+	if l.GetLevel()<=TraceLevel{
+		printWithColor(l.writer,ColorCyan,format,args)
+	}
+}
+
 // Debugf logs a debug message.
 func (l Logger) Debugf(format string, args ...interface{}) {
-	if l.GetLevel() <= 1 {
+	if l.GetLevel() <= DebugLevel {
 		printWithColor(l.writer,ColorBlue,format,args)
 	}
 }
 
 // Infof logs an info message.
 func (l Logger) Infof(format string, args ...interface{}) {
-	if l.GetLevel() <= 2 {
+	if l.GetLevel() <= InfoLevel {
 		printWithColor(l.writer,ColorGreen,format,args)
 	}
 }
 
 // Warnf logs a warning message.
 func (l Logger) Warnf(format string, args ...interface{}) {
-	if l.GetLevel() <= 3 {
+	if l.GetLevel() <= WarnLevel {
 		printWithColor(l.writer,ColorYellow,format,args)
 	}
 }
 
 // Errorf logs an error message.
 func (l Logger) Errorf(format string, args ...interface{}) {
-	if l.GetLevel() <= 4 {
+	if l.GetLevel() <= ErrorLevel {
 		printWithColor(l.writer,ColorRed,format,args)
 	}
 }
