@@ -57,7 +57,7 @@ func main() {
 		Storage:       storage,
 		Scrapper:      scrapper,
 		CodeAuthority: scrapmon.ConcurrentCodeAuthority{
-			Logger: logger.NewLogger(1),
+			Logger: logger.NewLogger(1,os.Stdout),
 		},
 	}
 

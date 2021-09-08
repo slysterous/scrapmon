@@ -2,6 +2,7 @@ package logger
 
 import (
 	"fmt"
+	"io"
 )
 
 //go:generate mockgen -destination mock/log.go -package log_mock . Logger
@@ -28,11 +29,13 @@ const (
 // Logger is a simple std out logger
 type Logger struct {
 	level uint32
+	writer io.Writer
 }
 
-func NewLogger(level uint32) Logger {
+func NewLogger(level uint32,writer io.Writer) Logger {
 	return Logger{
 		level: level,
+		writer: writer,
 	}
 }
 
@@ -42,31 +45,31 @@ func (l Logger) GetLevel() uint32 {
 // Debugf logs a debug message.
 func (l Logger) Debugf(format string, args ...interface{}) {
 	if l.GetLevel() <= 1 {
-		printWithColor(ColorBlue,format,args)
+		printWithColor(l.writer,ColorBlue,format,args)
 	}
 }
 
 // Infof logs an info message.
 func (l Logger) Infof(format string, args ...interface{}) {
 	if l.GetLevel() <= 2 {
-		printWithColor(ColorGreen,format,args)
+		printWithColor(l.writer,ColorGreen,format,args)
 	}
 }
 
 // Warnf logs a warning message.
 func (l Logger) Warnf(format string, args ...interface{}) {
 	if l.GetLevel() <= 3 {
-		printWithColor(ColorYellow,format,args)
+		printWithColor(l.writer,ColorYellow,format,args)
 	}
 }
 
 // Errorf logs an error message.
 func (l Logger) Errorf(format string, args ...interface{}) {
 	if l.GetLevel() <= 3 {
-		printWithColor(ColorRed,format,args)
+		printWithColor(l.writer,ColorRed,format,args)
 	}
 }
 
-func printWithColor(color color,format string, args ...interface{}) {
-	fmt.Printf(string(color)+format+string(ColorReset),args)
+func printWithColor(w io.Writer,color color,format string, args ...interface{}) {
+	fmt.Fprintf(w,string(color)+format+string(ColorReset),args)
 }
