@@ -65,7 +65,7 @@ func (l Logger) Warnf(format string, args ...interface{}) {
 
 // Errorf logs an error message.
 func (l Logger) Errorf(format string, args ...interface{}) {
-	if l.GetLevel() <= 3 {
+	if l.GetLevel() <= 4 {
 		printWithColor(l.writer,ColorRed,format,args)
 	}
 }
