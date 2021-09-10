@@ -13,14 +13,14 @@ migrate_db() {
     
     #docker run -it -v $(pwd)/internal/migrations/:/migrations --network host migrate/migrate -path=/migrations/ -database "postgres://$4:$5@$1:$2/$3?sslmode=disable" up  
 
-    migrate -database postgres://$4:$5@$1:$2/$3?sslmode=disable -verbose -source file:./migrations up
+    migrate -database postgres://$4:$5@$1:$2/$3?sslmode=disable -verbose -source file:../migrations up
     #./migrate -database postgres://postgres:password@scrapmon-db:5432/scrapmon?sslmode=disable -verbose -source file://./migrations up
     while [ $? -ne 0 -a $i -lt 60 ]; do
         echo "Database not ready (attempt #$i), retrying.."
         echo "migrate -database postgres://$4:$5@$1:$2/$3?sslmode=disable -verbose -source file://./internal/migrations up"
         sleep 2
         i=`expr $i + 1`
-         migrate -database postgres://$4:$5@$1:$2/$3?sslmode=disable -verbose -source file:./migrations up
+         migrate -database postgres://$4:$5@$1:$2/$3?sslmode=disable -verbose -source file:../migrations up
          #docker run -it -v $(pwd)/internal/migrations:/migrations --network host migrate/migrate -path=/migrations/ -database "postgres://$4:$5@$1:$2/$3?sslmode=disable" up  
     done
 }
