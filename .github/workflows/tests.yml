@@ -42,9 +42,9 @@ jobs:
     - name: Mod verify
       run: go mod verify
 
-    - name: Run gofmt
-      if: runner.os != 'Windows'
-      run: '[ -z $(gofmt -s -l .) ] || (gofmt -s -d . && exit 1)'
+#    - name: Run gofmt
+#      if: runner.os != 'Windows'
+#      run: '[ -z $(gofmt -s -l .) ] || (gofmt -s -d . && exit 1)'
 
     - name: Run go vet
       run: go vet ./...
