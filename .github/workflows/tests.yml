@@ -34,7 +34,13 @@ jobs:
           --health-retries 5
 
     runs-on: ${{ matrix.platform }}
-
+    env:
+      SCRAPMON_DB: scrapmon
+      SCRAPMON_DB_HOST: 127.0.0.1
+      SCRAPMON_DB_PORT: 5432
+      SCRAPMON_DB_NAME: scrapmon
+      SCRAPMON_DB_USER: postgres
+      SCRAPMON_DB_PASSWORD: password
     steps:
     - name: Install Go
       uses: actions/setup-go@v2
