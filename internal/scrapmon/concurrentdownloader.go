@@ -2,7 +2,6 @@ package scrapmon
 
 import (
 	"context"
-	"fmt"
 )
 
 //go:generate mockgen -destination mock/codeproducer.go -package scrapmon_mock . ConcurrentDownloader
@@ -96,7 +95,6 @@ func (cd ConcurrentScrapper) SaveFiles(
 				errc <- err
 				return
 			}
-
 			ss := Scrap{
 				RefCode: image.Code,
 				Status:  StatusSuccess,
@@ -110,7 +108,7 @@ func (cd ConcurrentScrapper) SaveFiles(
 			select {
 			case savedImages <- ss:
 			case <-ctx.Done():
-				fmt.Printf("CONTEXT DONE")
+				cd.Logger.Debugf("CONTEXT DONE")
 				return
 			}
 		}

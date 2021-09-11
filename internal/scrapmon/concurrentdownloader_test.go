@@ -484,62 +484,98 @@ func TestSaveFiles(t *testing.T) {
 
 	})
 	t.Run("Failed to save", func(t *testing.T) {
-		//mockCtrl := gomock.NewController(t)
-		//defer mockCtrl.Finish()
-		//
-		//filesToSave := scrapmon.ScrapedFile{
-		//	Code: "a",
-		//	Data: []byte{},
-		//	Type: "png",
-		//}
-		//
-		//mockLogger := log_mock.NewMockLogger(mockCtrl)
-		//cd := scrapmon.ConcurrentScrapper{
-		//	Logger: mockLogger,
-		//}
-		//
-		//mockDM := scrapmon_mock.NewMockDatabaseManager(mockCtrl)
-		//mockFM := scrapmon_mock.NewMockFileManager(mockCtrl)
-		//
-		//mockStorage := scrapmon.Storage{
-		//	Fm: mockFM,
-		//	Dm: mockDM,
-		//}
-		//
-		//ctx, cancel := context.WithCancel(context.Background())
-		//defer cancel()
-		//
-		//filesToSaveCh := make(chan scrapmon.ScrapedFile, 5)
-		////feed channel
-		//for _, file := range filesToSave {
-		//	mockFM.EXPECT().SaveFile(file).Return(nil).Times(1)
-		//	scrap := scrapmon.Scrap{
-		//		ID:            int64(counter),
-		//		RefCode:       file.Code,
-		//		CodeCreatedAt: time.Date(1, 1, 1, 0, 0, 0, 0, time.UTC),
-		//		FileURI:       "SOMEWHERE" + file.Code + ".png",
-		//		Status:        scrapmon.StatusSuccess,
-		//	}
-		//	mockDM.EXPECT().UpdateScrapByCode(scrap).Return(nil).Times(1)
-		//	filesToSaveCh <- file
-		//}
-		//
-		//scraps, _ := cd.SaveFiles(mockStorage, ctx, filesToSaveCh)
-		//
-		//var savedFiles []scrapmon.Scrap
-		//
-		//for scrap := range scraps {
-		//	counter++
-		//	savedFiles = append(savedFiles, scrap)
-		//
-		//	if counter == 4 {
-		//		cancel()
-		//		close(filesToSaveCh)
-		//	}
-		//}
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
 
+		fileToSave := scrapmon.ScrapedFile{
+			Code: "a",
+			Data: []byte{},
+			Type: "png",
+		}
+
+		mockLogger := log_mock.NewMockLogger(mockCtrl)
+		mockScrapper := scrapmon_mock.NewMockScrapper(mockCtrl)
+		cd := scrapmon.ConcurrentScrapper{
+			Logger:   mockLogger,
+			Scrapper: mockScrapper,
+		}
+
+		mockDM := scrapmon_mock.NewMockDatabaseManager(mockCtrl)
+		mockFM := scrapmon_mock.NewMockFileManager(mockCtrl)
+
+		mockStorage := scrapmon.Storage{
+			Fm: mockFM,
+			Dm: mockDM,
+		}
+
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
+		filesToSaveCh := make(chan scrapmon.ScrapedFile, 5)
+		filesToSaveCh <- fileToSave
+		//feed channel
+		mockFM.EXPECT().SaveFile(fileToSave).Return(errors.New("test error")).Times(1)
+
+		_, errs := cd.SaveFiles(mockStorage, ctx, filesToSaveCh)
+
+		for err := range errs {
+			if err == nil {
+				t.Errorf("expected err, got nil")
+			}
+			cancel()
+			close(filesToSaveCh)
+		}
 	})
 	t.Run("Failed to update state", func(t *testing.T) {
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
 
+		fileToSave := scrapmon.ScrapedFile{
+			Code: "a",
+			Data: []byte{},
+			Type: "png",
+		}
+
+		mockLogger := log_mock.NewMockLogger(mockCtrl)
+		mockScrapper := scrapmon_mock.NewMockScrapper(mockCtrl)
+		cd := scrapmon.ConcurrentScrapper{
+			Logger:   mockLogger,
+			Scrapper: mockScrapper,
+		}
+
+		mockDM := scrapmon_mock.NewMockDatabaseManager(mockCtrl)
+		mockFM := scrapmon_mock.NewMockFileManager(mockCtrl)
+
+		mockStorage := scrapmon.Storage{
+			Fm: mockFM,
+			Dm: mockDM,
+		}
+
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
+		filesToSaveCh := make(chan scrapmon.ScrapedFile, 5)
+		//feed channel
+		filesToSaveCh <- fileToSave
+
+		mockFM.EXPECT().SaveFile(fileToSave).Return(nil).Times(1)
+		scrap := scrapmon.Scrap{
+			ID:            0,
+			RefCode:       fileToSave.Code,
+			CodeCreatedAt: time.Date(1, 1, 1, 0, 0, 0, 0, time.UTC),
+			FileURI:       "SOMEWHERE" + fileToSave.Code + ".png",
+			Status:        scrapmon.StatusSuccess,
+		}
+		mockDM.EXPECT().UpdateScrapByCode(scrap).Return(errors.New("test error")).Times(1)
+
+		_, errs := cd.SaveFiles(mockStorage, ctx, filesToSaveCh)
+
+		for err := range errs {
+			if err == nil {
+				t.Errorf("expected err, got nil")
+			}
+			cancel()
+			close(filesToSaveCh)
+		}
 	})
 }

@@ -3,6 +3,7 @@ package scrapmon_test
 import (
 	"errors"
 	"github.com/golang/mock/gomock"
+	log_mock "github.com/slysterous/scrapmon/internal/logger/mock"
 	"github.com/slysterous/scrapmon/internal/scrapmon"
 	scrapmon_mock "github.com/slysterous/scrapmon/internal/scrapmon/mock"
 	"testing"
@@ -75,5 +76,65 @@ func TestStoragePurge(t *testing.T) {
 			t.Errorf("wanted: error from file manager, got: %v", err)
 		}
 
+	})
+}
+
+func TestConcurrentCommandManagerPurgeCommand(t *testing.T) {
+	t.Run("Success", func(t *testing.T) {
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+
+		mockFm := scrapmon_mock.NewMockFileManager(mockCtrl)
+		mockDm := scrapmon_mock.NewMockDatabaseManager(mockCtrl)
+
+		mockStorage := scrapmon.Storage{
+			Fm: mockFm,
+			Dm: mockDm,
+		}
+		mockLogger := log_mock.NewMockLogger(mockCtrl)
+		mockScrapper := scrapmon_mock.NewMockScrapper(mockCtrl)
+		commandManager := scrapmon.ConcurrentCommandManager{
+			Storage: mockStorage,
+			CodeAuthority: scrapmon.ConcurrentCodeAuthority{
+				Logger:   mockLogger,
+				Scrapper: mockScrapper,
+			},
+		}
+
+		mockDm.EXPECT().Purge().Return(nil).Times(1)
+		mockFm.EXPECT().Purge().Return(nil).Times(1)
+
+		err := commandManager.PurgeCommand()
+		if err != nil {
+			t.Errorf("expected nil, got : %v", err)
+		}
+	})
+	t.Run("Failure", func(t *testing.T) {
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+
+		mockFm := scrapmon_mock.NewMockFileManager(mockCtrl)
+		mockDm := scrapmon_mock.NewMockDatabaseManager(mockCtrl)
+
+		mockStorage := scrapmon.Storage{
+			Fm: mockFm,
+			Dm: mockDm,
+		}
+		mockLogger := log_mock.NewMockLogger(mockCtrl)
+		mockScrapper := scrapmon_mock.NewMockScrapper(mockCtrl)
+		commandManager := scrapmon.ConcurrentCommandManager{
+			Storage: mockStorage,
+			CodeAuthority: scrapmon.ConcurrentCodeAuthority{
+				Logger:   mockLogger,
+				Scrapper: mockScrapper,
+			},
+		}
+
+		mockDm.EXPECT().Purge().Return(errors.New("test error")).Times(1)
+
+		err := commandManager.PurgeCommand()
+		if err == nil {
+			t.Errorf("expected error, got nil")
+		}
 	})
 }
