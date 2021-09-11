@@ -54,7 +54,7 @@ func (ccm ConcurrentCommandManager) StartCommand(fromCode string, iterations int
 
 	// start workers
 	for i := 0; i < workerNumber; i++ {
-		downloadWorkers[i], downloadWorkerErrors = ccm.FileScrapper.DownloadFiles(ctx, ccm.Storage, ccm.Scrapper, pendingFiles, produceMoreCodes)
+		downloadWorkers[i], downloadWorkerErrors = ccm.FileScrapper.DownloadFiles(ctx, ccm.Storage, pendingFiles, produceMoreCodes)
 		errcList = append(errcList, downloadWorkerErrors)
 	}
 

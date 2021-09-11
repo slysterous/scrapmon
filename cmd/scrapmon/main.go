@@ -54,10 +54,10 @@ func main() {
 	})
 
 	commandManager := scrapmon.ConcurrentCommandManager{
-		Storage:  storage,
-		Scrapper: scrapper,
+		Storage: storage,
 		CodeAuthority: scrapmon.ConcurrentCodeAuthority{
-			Logger: logger.NewLogger(1, os.Stdout),
+			Logger:   logger.NewLogger(1, os.Stdout),
+			Scrapper: scrapper,
 		},
 	}
 

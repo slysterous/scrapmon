@@ -12,7 +12,6 @@ type ConcurrentDownloader interface {
 	DownloadFiles(
 		ctx context.Context,
 		storage Storage,
-		scrapper Scrapper,
 		pendingFiles <-chan Scrap,
 		produceMoreCodes chan<- struct{},
 	) (<-chan ScrapedFile, <-chan error)
@@ -24,13 +23,13 @@ type ConcurrentDownloader interface {
 
 // ConcurrentScrapper is responsible for code creation and handling.
 type ConcurrentScrapper struct {
-	Logger Logger
+	Logger   Logger
+	Scrapper Scrapper
 }
 
 func (cd ConcurrentScrapper) DownloadFiles(
 	ctx context.Context,
 	storage Storage,
-	scrapper Scrapper,
 	pendingFiles <-chan Scrap,
 	produceMoreCodes chan<- struct{},
 ) (<-chan ScrapedFile, <-chan error) {
@@ -43,7 +42,7 @@ func (cd ConcurrentScrapper) DownloadFiles(
 		defer close(errc)
 
 		for image := range pendingFiles {
-			ScrapedFile, err := scrapper.ScrapeByCode(image.RefCode, "png")
+			ScrapedFile, err := cd.Scrapper.ScrapeByCode(image.RefCode, "png")
 			if err != nil {
 				// Handle an error that occurs during the goroutine.
 				errc <- err

@@ -28,7 +28,8 @@ type ConcurrentCodeProducer interface {
 
 // ConcurrentCodeAuthority is responsible for code creation and handling.
 type ConcurrentCodeAuthority struct {
-	Logger Logger
+	Logger   Logger
+	Scrapper Scrapper
 }
 
 // Produce produces codes in a channel while handling feedback.
