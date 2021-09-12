@@ -63,6 +63,7 @@ func (l Logger) Infof(format string, args ...interface{}) {
 	}
 }
 
+// Info logs a message.
 func (l Logger) Info(str string) {
 	if l.GetLevel() <=  InfoLevel {
 		printWithColor(l.writer,ColorGreen,str)
