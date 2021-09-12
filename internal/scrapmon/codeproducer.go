@@ -42,7 +42,7 @@ func (cca ConcurrentCodeAuthority) Produce(
 	produceMoreCodes := make(chan struct{}, iterations+1)
 	codes := make(chan string, iterations+1)
 	iterationsCounter := 0
-	cca.Logger.Infof("Initializing Code Production...!")
+	cca.Logger.Info("Initializing Code Production...! \n")
 	go func() {
 		defer close(codes)
 		defer close(produceMoreCodes)
@@ -55,8 +55,8 @@ func (cca ConcurrentCodeAuthority) Produce(
 
 			select {
 			case <-produceMoreCodes:
-				cca.Logger.Debugf("Iterations Counter: %d, Desired Iterations: %d\n", iterationsCounter, iterations)
-				cca.Logger.Debugf("Producing Code: %s\n", index.String())
+				cca.Logger.Debugf("Iterations Counter: -%d-, Desired Iterations: %d \n", iterationsCounter, iterations)
+				cca.Logger.Debugf("Producing Code: %s \n", index.String())
 			codesFor:
 				for {
 					select {

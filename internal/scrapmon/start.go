@@ -8,7 +8,6 @@ import (
 	"time"
 )
 
-// imgur.com/abcdef.png
 // StartCommand is what happens when the command is executed.
 func (ccm ConcurrentCommandManager) StartCommand(fromCode string, iterations int, workerNumber int) error {
 	// mark the start time
@@ -34,7 +33,7 @@ func (ccm ConcurrentCommandManager) StartCommand(fromCode string, iterations int
 
 	// create an index with the code to start from
 	index := createResumeCodeNumber(&fromCode)
-	fmt.Printf("Starting from Code: %s\n", index.String())
+	ccm.Logger.Infof("Starting from Code: %s\n", index.String())
 
 	// produce codes in a channel and expose a produceMoreCodes channel to enable
 	// a feedback loop

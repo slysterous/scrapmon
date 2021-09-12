@@ -5,36 +5,37 @@
 package http_mock
 
 import (
-	gomock "github.com/golang/mock/gomock"
 	io "io"
 	http "net/http"
 	reflect "reflect"
+
+	gomock "github.com/golang/mock/gomock"
 )
 
-// MockReader is a mock of Reader interface
+// MockReader is a mock of Reader interface.
 type MockReader struct {
 	ctrl     *gomock.Controller
 	recorder *MockReaderMockRecorder
 }
 
-// MockReaderMockRecorder is the mock recorder for MockReader
+// MockReaderMockRecorder is the mock recorder for MockReader.
 type MockReaderMockRecorder struct {
 	mock *MockReader
 }
 
-// NewMockReader creates a new mock instance
+// NewMockReader creates a new mock instance.
 func NewMockReader(ctrl *gomock.Controller) *MockReader {
 	mock := &MockReader{ctrl: ctrl}
 	mock.recorder = &MockReaderMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockReader) EXPECT() *MockReaderMockRecorder {
 	return m.recorder
 }
 
-// ReadAll mocks base method
+// ReadAll mocks base method.
 func (m *MockReader) ReadAll(arg0 io.Reader) ([]byte, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ReadAll", arg0)
@@ -43,36 +44,36 @@ func (m *MockReader) ReadAll(arg0 io.Reader) ([]byte, error) {
 	return ret0, ret1
 }
 
-// ReadAll indicates an expected call of ReadAll
+// ReadAll indicates an expected call of ReadAll.
 func (mr *MockReaderMockRecorder) ReadAll(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReadAll", reflect.TypeOf((*MockReader)(nil).ReadAll), arg0)
 }
 
-// MockDownloader is a mock of Downloader interface
+// MockDownloader is a mock of Downloader interface.
 type MockDownloader struct {
 	ctrl     *gomock.Controller
 	recorder *MockDownloaderMockRecorder
 }
 
-// MockDownloaderMockRecorder is the mock recorder for MockDownloader
+// MockDownloaderMockRecorder is the mock recorder for MockDownloader.
 type MockDownloaderMockRecorder struct {
 	mock *MockDownloader
 }
 
-// NewMockDownloader creates a new mock instance
+// NewMockDownloader creates a new mock instance.
 func NewMockDownloader(ctrl *gomock.Controller) *MockDownloader {
 	mock := &MockDownloader{ctrl: ctrl}
 	mock.recorder = &MockDownloaderMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockDownloader) EXPECT() *MockDownloaderMockRecorder {
 	return m.recorder
 }
 
-// Get mocks base method
+// Get mocks base method.
 func (m *MockDownloader) Get(arg0 string) (*http.Response, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Get", arg0)
@@ -81,7 +82,7 @@ func (m *MockDownloader) Get(arg0 string) (*http.Response, error) {
 	return ret0, ret1
 }
 
-// Get indicates an expected call of Get
+// Get indicates an expected call of Get.
 func (mr *MockDownloaderMockRecorder) Get(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockDownloader)(nil).Get), arg0)

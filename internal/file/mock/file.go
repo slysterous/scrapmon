@@ -5,87 +5,88 @@
 package file_mock
 
 import (
-	gomock "github.com/golang/mock/gomock"
-	os "os"
+	fs "io/fs"
 	reflect "reflect"
+
+	gomock "github.com/golang/mock/gomock"
 )
 
-// MockWriter is a mock of Writer interface
+// MockWriter is a mock of Writer interface.
 type MockWriter struct {
 	ctrl     *gomock.Controller
 	recorder *MockWriterMockRecorder
 }
 
-// MockWriterMockRecorder is the mock recorder for MockWriter
+// MockWriterMockRecorder is the mock recorder for MockWriter.
 type MockWriterMockRecorder struct {
 	mock *MockWriter
 }
 
-// NewMockWriter creates a new mock instance
+// NewMockWriter creates a new mock instance.
 func NewMockWriter(ctrl *gomock.Controller) *MockWriter {
 	mock := &MockWriter{ctrl: ctrl}
 	mock.recorder = &MockWriterMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockWriter) EXPECT() *MockWriterMockRecorder {
 	return m.recorder
 }
 
-// WriteFile mocks base method
-func (m *MockWriter) WriteFile(arg0 string, arg1 []byte, arg2 os.FileMode) error {
+// WriteFile mocks base method.
+func (m *MockWriter) WriteFile(arg0 string, arg1 []byte, arg2 fs.FileMode) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "WriteFile", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// WriteFile indicates an expected call of WriteFile
+// WriteFile indicates an expected call of WriteFile.
 func (mr *MockWriterMockRecorder) WriteFile(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WriteFile", reflect.TypeOf((*MockWriter)(nil).WriteFile), arg0, arg1, arg2)
 }
 
-// MockPurger is a mock of Purger interface
+// MockPurger is a mock of Purger interface.
 type MockPurger struct {
 	ctrl     *gomock.Controller
 	recorder *MockPurgerMockRecorder
 }
 
-// MockPurgerMockRecorder is the mock recorder for MockPurger
+// MockPurgerMockRecorder is the mock recorder for MockPurger.
 type MockPurgerMockRecorder struct {
 	mock *MockPurger
 }
 
-// NewMockPurger creates a new mock instance
+// NewMockPurger creates a new mock instance.
 func NewMockPurger(ctrl *gomock.Controller) *MockPurger {
 	mock := &MockPurger{ctrl: ctrl}
 	mock.recorder = &MockPurgerMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockPurger) EXPECT() *MockPurgerMockRecorder {
 	return m.recorder
 }
 
-// ReadDir mocks base method
-func (m *MockPurger) ReadDir(arg0 string) ([]os.FileInfo, error) {
+// ReadDir mocks base method.
+func (m *MockPurger) ReadDir(arg0 string) ([]fs.FileInfo, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ReadDir", arg0)
-	ret0, _ := ret[0].([]os.FileInfo)
+	ret0, _ := ret[0].([]fs.FileInfo)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// ReadDir indicates an expected call of ReadDir
+// ReadDir indicates an expected call of ReadDir.
 func (mr *MockPurgerMockRecorder) ReadDir(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReadDir", reflect.TypeOf((*MockPurger)(nil).ReadDir), arg0)
 }
 
-// RemoveAll mocks base method
+// RemoveAll mocks base method.
 func (m *MockPurger) RemoveAll(arg0 string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "RemoveAll", arg0)
@@ -93,7 +94,7 @@ func (m *MockPurger) RemoveAll(arg0 string) error {
 	return ret0
 }
 
-// RemoveAll indicates an expected call of RemoveAll
+// RemoveAll indicates an expected call of RemoveAll.
 func (mr *MockPurgerMockRecorder) RemoveAll(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveAll", reflect.TypeOf((*MockPurger)(nil).RemoveAll), arg0)

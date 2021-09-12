@@ -5,8 +5,6 @@ import (
 	"io"
 )
 
-//go:generate mockgen -destination mock/log.go -package log_mock . Logger
-
 // Possible Scrap Status  values.
 const (
 	TraceLevel uint32 = iota
@@ -47,38 +45,48 @@ func (l Logger) GetLevel() uint32 {
 
 func (l Logger) Tracef(format string, args ...interface{}) {
 	if l.GetLevel() <= TraceLevel {
-		printWithColor(l.writer, ColorCyan, format, args)
+		printfWithColor(l.writer, ColorCyan, format, args...)
 	}
 }
 
 // Debugf logs a debug message.
 func (l Logger) Debugf(format string, args ...interface{}) {
 	if l.GetLevel() <= DebugLevel {
-		printWithColor(l.writer, ColorBlue, format, args)
+		printfWithColor(l.writer, ColorBlue, format, args...)
 	}
 }
 
-// Infof logs an info message.
+// Infof logs a formatted info message.
 func (l Logger) Infof(format string, args ...interface{}) {
 	if l.GetLevel() <= InfoLevel {
-		printWithColor(l.writer, ColorGreen, format, args)
+		printfWithColor(l.writer, ColorGreen, format, args...)
+	}
+}
+
+func (l Logger) Info(str string) {
+	if l.GetLevel() <=  InfoLevel {
+		printWithColor(l.writer,ColorGreen,str)
 	}
 }
 
 // Warnf logs a warning message.
 func (l Logger) Warnf(format string, args ...interface{}) {
 	if l.GetLevel() <= WarnLevel {
-		printWithColor(l.writer, ColorYellow, format, args)
+		printfWithColor(l.writer, ColorYellow, format, args...)
 	}
 }
 
 // Errorf logs an error message.
 func (l Logger) Errorf(format string, args ...interface{}) {
 	if l.GetLevel() <= ErrorLevel {
-		printWithColor(l.writer, ColorRed, format, args)
+		printfWithColor(l.writer, ColorRed, format, args...)
 	}
 }
 
-func printWithColor(w io.Writer, color color, format string, args ...interface{}) {
-	fmt.Fprintf(w, string(color)+format+string(ColorReset), args)
+func printfWithColor(w io.Writer, color color, format string, args ...interface{}) {
+	fmt.Fprintf(w, string(color)+format+string(ColorReset), args...)
+}
+
+func printWithColor(w io.Writer, color color,str string){
+	fmt.Fprint(w,string(color)+str+string(ColorReset))
 }

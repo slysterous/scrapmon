@@ -22,16 +22,17 @@ func main() {
 	//load env.
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatalf("could not load env file")
+		log.Fatalf("could not load env file \n")
 	}
 
 	// fetch the config from env variables.
 	conf := config.FromEnv()
 
+
 	// init database manager
 	pgClient, err := postgres.NewClient(getDataSource(conf), conf.MaxDBConnections)
 	if err != nil {
-		log.Fatalf("could not connect to DB, err: %v", err)
+		log.Fatalf("could not connect to DB, err: %v \n", err)
 	}
 	defer pgClient.DB.Close()
 
@@ -53,10 +54,14 @@ func main() {
 		Timeout:       0,
 	})
 
+	lg:=logger.NewLogger(1, os.Stdout)
+
+
 	commandManager := scrapmon.ConcurrentCommandManager{
+		Logger: lg,
 		Storage: storage,
 		CodeAuthority: scrapmon.ConcurrentCodeAuthority{
-			Logger:   logger.NewLogger(1, os.Stdout),
+			Logger:   lg,
 			Scrapper: scrapper,
 		},
 	}
