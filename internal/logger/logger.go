@@ -5,6 +5,7 @@ import (
 	"io"
 )
 
+
 // Possible Scrap Status  values.
 const (
 	TraceLevel uint32 = iota
