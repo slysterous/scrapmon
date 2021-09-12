@@ -11,9 +11,8 @@ import (
 	"github.com/golang/mock/gomock"
 	customNumber "github.com/slysterous/custom-number"
 
-	log_mock "github.com/slysterous/scrapmon/internal/logger/mock"
 	"github.com/slysterous/scrapmon/internal/scrapmon"
-	scrapmon_mock "github.com/slysterous/scrapmon/internal/scrapmon/mock"
+	scrapmonmock "github.com/slysterous/scrapmon/internal/scrapmon/mock"
 )
 
 var CustomNumberDigitValues = []rune{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'}
@@ -23,7 +22,7 @@ func TestProduceCodes(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 		counter := 0
-		mockLogger := log_mock.NewMockLogger(mockCtrl)
+		mockLogger := scrapmonmock.NewMockLogger(mockCtrl)
 		cca := scrapmon.ConcurrentCodeAuthority{
 			Logger: mockLogger,
 		}
@@ -64,7 +63,7 @@ func TestProduceCodes(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 		counter := 0
-		mockLogger := log_mock.NewMockLogger(mockCtrl)
+		mockLogger := scrapmonmock.NewMockLogger(mockCtrl)
 		cca := scrapmon.ConcurrentCodeAuthority{
 			Logger: mockLogger,
 		}
@@ -113,15 +112,15 @@ func TestFilterCodes(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 		counter := 0
-		mockLogger := log_mock.NewMockLogger(mockCtrl)
+		mockLogger := scrapmonmock.NewMockLogger(mockCtrl)
 		cca := scrapmon.ConcurrentCodeAuthority{
 			Logger: mockLogger,
 		}
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 
-		mockDM := scrapmon_mock.NewMockDatabaseManager(mockCtrl)
-		mockFM := scrapmon_mock.NewMockFileManager(mockCtrl)
+		mockDM := scrapmonmock.NewMockDatabaseManager(mockCtrl)
+		mockFM := scrapmonmock.NewMockFileManager(mockCtrl)
 
 		mockStorage := scrapmon.Storage{
 			Fm: mockFM,
@@ -163,15 +162,15 @@ func TestFilterCodes(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 		counter := 0
-		mockLogger := log_mock.NewMockLogger(mockCtrl)
+		mockLogger := scrapmonmock.NewMockLogger(mockCtrl)
 		cca := scrapmon.ConcurrentCodeAuthority{
 			Logger: mockLogger,
 		}
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 
-		mockDM := scrapmon_mock.NewMockDatabaseManager(mockCtrl)
-		mockFM := scrapmon_mock.NewMockFileManager(mockCtrl)
+		mockDM := scrapmonmock.NewMockDatabaseManager(mockCtrl)
+		mockFM := scrapmonmock.NewMockFileManager(mockCtrl)
 
 		mockStorage := scrapmon.Storage{
 			Fm: mockFM,
@@ -219,15 +218,15 @@ func TestFilterCodes(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 		counter := 0
-		mockLogger := log_mock.NewMockLogger(mockCtrl)
+		mockLogger := scrapmonmock.NewMockLogger(mockCtrl)
 		cca := scrapmon.ConcurrentCodeAuthority{
 			Logger: mockLogger,
 		}
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 
-		mockDM := scrapmon_mock.NewMockDatabaseManager(mockCtrl)
-		mockFM := scrapmon_mock.NewMockFileManager(mockCtrl)
+		mockDM := scrapmonmock.NewMockDatabaseManager(mockCtrl)
+		mockFM := scrapmonmock.NewMockFileManager(mockCtrl)
 
 		mockStorage := scrapmon.Storage{
 			Fm: mockFM,
@@ -284,15 +283,15 @@ func TestFilterCodes(t *testing.T) {
 		//t.Parallel()
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
-		mockLogger := log_mock.NewMockLogger(mockCtrl)
+		mockLogger := scrapmonmock.NewMockLogger(mockCtrl)
 		cca := scrapmon.ConcurrentCodeAuthority{
 			Logger: mockLogger,
 		}
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 
-		mockDM := scrapmon_mock.NewMockDatabaseManager(mockCtrl)
-		mockFM := scrapmon_mock.NewMockFileManager(mockCtrl)
+		mockDM := scrapmonmock.NewMockDatabaseManager(mockCtrl)
+		mockFM := scrapmonmock.NewMockFileManager(mockCtrl)
 
 		mockStorage := scrapmon.Storage{
 			Fm: mockFM,

@@ -3,9 +3,8 @@ package scrapmon_test
 import (
 	"errors"
 	"github.com/golang/mock/gomock"
-	log_mock "github.com/slysterous/scrapmon/internal/logger/mock"
 	"github.com/slysterous/scrapmon/internal/scrapmon"
-	scrapmon_mock "github.com/slysterous/scrapmon/internal/scrapmon/mock"
+	scrapmonmock "github.com/slysterous/scrapmon/internal/scrapmon/mock"
 	"testing"
 )
 
@@ -14,8 +13,8 @@ func TestStoragePurge(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
-		mockFm := scrapmon_mock.NewMockFileManager(mockCtrl)
-		mockDm := scrapmon_mock.NewMockDatabaseManager(mockCtrl)
+		mockFm := scrapmonmock.NewMockFileManager(mockCtrl)
+		mockDm := scrapmonmock.NewMockDatabaseManager(mockCtrl)
 
 		storage := scrapmon.Storage{
 			Fm: mockFm,
@@ -34,8 +33,8 @@ func TestStoragePurge(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
-		mockFm := scrapmon_mock.NewMockFileManager(mockCtrl)
-		mockDm := scrapmon_mock.NewMockDatabaseManager(mockCtrl)
+		mockFm := scrapmonmock.NewMockFileManager(mockCtrl)
+		mockDm := scrapmonmock.NewMockDatabaseManager(mockCtrl)
 
 		storage := scrapmon.Storage{
 			Fm: mockFm,
@@ -57,8 +56,8 @@ func TestStoragePurge(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
-		mockFm := scrapmon_mock.NewMockFileManager(mockCtrl)
-		mockDm := scrapmon_mock.NewMockDatabaseManager(mockCtrl)
+		mockFm := scrapmonmock.NewMockFileManager(mockCtrl)
+		mockDm := scrapmonmock.NewMockDatabaseManager(mockCtrl)
 
 		storage := scrapmon.Storage{
 			Fm: mockFm,
@@ -84,15 +83,15 @@ func TestConcurrentCommandManagerPurgeCommand(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
-		mockFm := scrapmon_mock.NewMockFileManager(mockCtrl)
-		mockDm := scrapmon_mock.NewMockDatabaseManager(mockCtrl)
+		mockFm := scrapmonmock.NewMockFileManager(mockCtrl)
+		mockDm := scrapmonmock.NewMockDatabaseManager(mockCtrl)
 
 		mockStorage := scrapmon.Storage{
 			Fm: mockFm,
 			Dm: mockDm,
 		}
-		mockLogger := log_mock.NewMockLogger(mockCtrl)
-		mockScrapper := scrapmon_mock.NewMockScrapper(mockCtrl)
+		mockLogger := scrapmonmock.NewMockLogger(mockCtrl)
+		mockScrapper := scrapmonmock.NewMockScrapper(mockCtrl)
 		commandManager := scrapmon.ConcurrentCommandManager{
 			Storage: mockStorage,
 			CodeAuthority: scrapmon.ConcurrentCodeAuthority{
@@ -113,15 +112,15 @@ func TestConcurrentCommandManagerPurgeCommand(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
-		mockFm := scrapmon_mock.NewMockFileManager(mockCtrl)
-		mockDm := scrapmon_mock.NewMockDatabaseManager(mockCtrl)
+		mockFm := scrapmonmock.NewMockFileManager(mockCtrl)
+		mockDm := scrapmonmock.NewMockDatabaseManager(mockCtrl)
 
 		mockStorage := scrapmon.Storage{
 			Fm: mockFm,
 			Dm: mockDm,
 		}
-		mockLogger := log_mock.NewMockLogger(mockCtrl)
-		mockScrapper := scrapmon_mock.NewMockScrapper(mockCtrl)
+		mockLogger := scrapmonmock.NewMockLogger(mockCtrl)
+		mockScrapper := scrapmonmock.NewMockScrapper(mockCtrl)
 		commandManager := scrapmon.ConcurrentCommandManager{
 			Storage: mockStorage,
 			CodeAuthority: scrapmon.ConcurrentCodeAuthority{

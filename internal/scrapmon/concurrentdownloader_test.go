@@ -10,9 +10,8 @@ import (
 
 	"github.com/golang/mock/gomock"
 
-	log_mock "github.com/slysterous/scrapmon/internal/logger/mock"
 	"github.com/slysterous/scrapmon/internal/scrapmon"
-	scrapmon_mock "github.com/slysterous/scrapmon/internal/scrapmon/mock"
+	scrapmonmock "github.com/slysterous/scrapmon/internal/scrapmon/mock"
 )
 
 func TestDownloadFiles(t *testing.T) {
@@ -75,15 +74,15 @@ func TestDownloadFiles(t *testing.T) {
 		}
 
 		counter := 0
-		mockLogger := log_mock.NewMockLogger(mockCtrl)
-		mockScrapper := scrapmon_mock.NewMockScrapper(mockCtrl)
+		mockLogger := scrapmonmock.NewMockLogger(mockCtrl)
+		mockScrapper := scrapmonmock.NewMockScrapper(mockCtrl)
 		cd := scrapmon.ConcurrentScrapper{
 			Logger:   mockLogger,
 			Scrapper: mockScrapper,
 		}
 
-		mockDM := scrapmon_mock.NewMockDatabaseManager(mockCtrl)
-		mockFM := scrapmon_mock.NewMockFileManager(mockCtrl)
+		mockDM := scrapmonmock.NewMockDatabaseManager(mockCtrl)
+		mockFM := scrapmonmock.NewMockFileManager(mockCtrl)
 
 		mockStorage := scrapmon.Storage{
 			Fm: mockFM,
@@ -132,15 +131,15 @@ func TestDownloadFiles(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		counter := 0
-		mockLogger := log_mock.NewMockLogger(mockCtrl)
-		mockScrapper := scrapmon_mock.NewMockScrapper(mockCtrl)
+		mockLogger := scrapmonmock.NewMockLogger(mockCtrl)
+		mockScrapper := scrapmonmock.NewMockScrapper(mockCtrl)
 		cd := scrapmon.ConcurrentScrapper{
 			Logger:   mockLogger,
 			Scrapper: mockScrapper,
 		}
 
-		mockDM := scrapmon_mock.NewMockDatabaseManager(mockCtrl)
-		mockFM := scrapmon_mock.NewMockFileManager(mockCtrl)
+		mockDM := scrapmonmock.NewMockDatabaseManager(mockCtrl)
+		mockFM := scrapmonmock.NewMockFileManager(mockCtrl)
 
 		mockStorage := scrapmon.Storage{
 			Fm: mockFM,
@@ -189,15 +188,15 @@ func TestDownloadFiles(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		counter := 0
-		mockLogger := log_mock.NewMockLogger(mockCtrl)
-		mockScrapper := scrapmon_mock.NewMockScrapper(mockCtrl)
+		mockLogger := scrapmonmock.NewMockLogger(mockCtrl)
+		mockScrapper := scrapmonmock.NewMockScrapper(mockCtrl)
 		cd := scrapmon.ConcurrentScrapper{
 			Logger:   mockLogger,
 			Scrapper: mockScrapper,
 		}
 
-		mockDM := scrapmon_mock.NewMockDatabaseManager(mockCtrl)
-		mockFM := scrapmon_mock.NewMockFileManager(mockCtrl)
+		mockDM := scrapmonmock.NewMockDatabaseManager(mockCtrl)
+		mockFM := scrapmonmock.NewMockFileManager(mockCtrl)
 
 		mockStorage := scrapmon.Storage{
 			Fm: mockFM,
@@ -246,15 +245,15 @@ func TestDownloadFiles(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		counter := 0
-		mockLogger := log_mock.NewMockLogger(mockCtrl)
-		mockScrapper := scrapmon_mock.NewMockScrapper(mockCtrl)
+		mockLogger := scrapmonmock.NewMockLogger(mockCtrl)
+		mockScrapper := scrapmonmock.NewMockScrapper(mockCtrl)
 		cd := scrapmon.ConcurrentScrapper{
 			Logger:   mockLogger,
 			Scrapper: mockScrapper,
 		}
 
-		mockDM := scrapmon_mock.NewMockDatabaseManager(mockCtrl)
-		mockFM := scrapmon_mock.NewMockFileManager(mockCtrl)
+		mockDM := scrapmonmock.NewMockDatabaseManager(mockCtrl)
+		mockFM := scrapmonmock.NewMockFileManager(mockCtrl)
 
 		mockStorage := scrapmon.Storage{
 			Fm: mockFM,
@@ -307,15 +306,15 @@ func TestDownloadFiles(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		counter := 0
-		mockLogger := log_mock.NewMockLogger(mockCtrl)
-		mockScrapper := scrapmon_mock.NewMockScrapper(mockCtrl)
+		mockLogger := scrapmonmock.NewMockLogger(mockCtrl)
+		mockScrapper := scrapmonmock.NewMockScrapper(mockCtrl)
 		cd := scrapmon.ConcurrentScrapper{
 			Logger:   mockLogger,
 			Scrapper: mockScrapper,
 		}
 
-		mockDM := scrapmon_mock.NewMockDatabaseManager(mockCtrl)
-		mockFM := scrapmon_mock.NewMockFileManager(mockCtrl)
+		mockDM := scrapmonmock.NewMockDatabaseManager(mockCtrl)
+		mockFM := scrapmonmock.NewMockFileManager(mockCtrl)
 
 		mockStorage := scrapmon.Storage{
 			Fm: mockFM,
@@ -358,15 +357,15 @@ func TestDownloadFiles(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		counter := 0
-		mockLogger := log_mock.NewMockLogger(mockCtrl)
-		mockScrapper := scrapmon_mock.NewMockScrapper(mockCtrl)
+		mockLogger := scrapmonmock.NewMockLogger(mockCtrl)
+		mockScrapper := scrapmonmock.NewMockScrapper(mockCtrl)
 		cd := scrapmon.ConcurrentScrapper{
 			Logger:   mockLogger,
 			Scrapper: mockScrapper,
 		}
 
-		mockDM := scrapmon_mock.NewMockDatabaseManager(mockCtrl)
-		mockFM := scrapmon_mock.NewMockFileManager(mockCtrl)
+		mockDM := scrapmonmock.NewMockDatabaseManager(mockCtrl)
+		mockFM := scrapmonmock.NewMockFileManager(mockCtrl)
 
 		mockStorage := scrapmon.Storage{
 			Fm: mockFM,
@@ -435,15 +434,15 @@ func TestSaveFiles(t *testing.T) {
 			},
 		}
 		counter := 0
-		mockLogger := log_mock.NewMockLogger(mockCtrl)
-		mockScrapper := scrapmon_mock.NewMockScrapper(mockCtrl)
+		mockLogger := scrapmonmock.NewMockLogger(mockCtrl)
+		mockScrapper := scrapmonmock.NewMockScrapper(mockCtrl)
 		cd := scrapmon.ConcurrentScrapper{
 			Logger:   mockLogger,
 			Scrapper: mockScrapper,
 		}
 
-		mockDM := scrapmon_mock.NewMockDatabaseManager(mockCtrl)
-		mockFM := scrapmon_mock.NewMockFileManager(mockCtrl)
+		mockDM := scrapmonmock.NewMockDatabaseManager(mockCtrl)
+		mockFM := scrapmonmock.NewMockFileManager(mockCtrl)
 
 		mockStorage := scrapmon.Storage{
 			Fm: mockFM,
@@ -493,15 +492,15 @@ func TestSaveFiles(t *testing.T) {
 			Type: "png",
 		}
 
-		mockLogger := log_mock.NewMockLogger(mockCtrl)
-		mockScrapper := scrapmon_mock.NewMockScrapper(mockCtrl)
+		mockLogger := scrapmonmock.NewMockLogger(mockCtrl)
+		mockScrapper := scrapmonmock.NewMockScrapper(mockCtrl)
 		cd := scrapmon.ConcurrentScrapper{
 			Logger:   mockLogger,
 			Scrapper: mockScrapper,
 		}
 
-		mockDM := scrapmon_mock.NewMockDatabaseManager(mockCtrl)
-		mockFM := scrapmon_mock.NewMockFileManager(mockCtrl)
+		mockDM := scrapmonmock.NewMockDatabaseManager(mockCtrl)
+		mockFM := scrapmonmock.NewMockFileManager(mockCtrl)
 
 		mockStorage := scrapmon.Storage{
 			Fm: mockFM,
@@ -536,15 +535,15 @@ func TestSaveFiles(t *testing.T) {
 			Type: "png",
 		}
 
-		mockLogger := log_mock.NewMockLogger(mockCtrl)
-		mockScrapper := scrapmon_mock.NewMockScrapper(mockCtrl)
+		mockLogger := scrapmonmock.NewMockLogger(mockCtrl)
+		mockScrapper := scrapmonmock.NewMockScrapper(mockCtrl)
 		cd := scrapmon.ConcurrentScrapper{
 			Logger:   mockLogger,
 			Scrapper: mockScrapper,
 		}
 
-		mockDM := scrapmon_mock.NewMockDatabaseManager(mockCtrl)
-		mockFM := scrapmon_mock.NewMockFileManager(mockCtrl)
+		mockDM := scrapmonmock.NewMockDatabaseManager(mockCtrl)
+		mockFM := scrapmonmock.NewMockFileManager(mockCtrl)
 
 		mockStorage := scrapmon.Storage{
 			Fm: mockFM,

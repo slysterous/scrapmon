@@ -16,7 +16,7 @@ func TestConcurrentCommandManagerStartCommand(t *testing.T) {
 	//		Fm: mockFm,
 	//		Dm: mockDm,
 	//	}
-	//	mockLogger := log_mock.NewMockLogger(mockCtrl)
+	//	mockLogger := scrapmonmock.NewMockLogger(mockCtrl)
 	//	mockScrapper := scrapmon_mock.NewMockScrapper(mockCtrl)
 	//	commandManager := scrapmon.ConcurrentCommandManager{
 	//		Storage: mockStorage,
