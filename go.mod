@@ -1,6 +1,6 @@
 module github.com/slysterous/scrapmon
 
-go 1.13
+go 1.16
 
 require (
 	github.com/DATA-DOG/go-sqlmock v1.4.1
@@ -10,11 +10,9 @@ require (
 	github.com/golang-migrate/migrate v3.5.4+incompatible
 	github.com/golang/mock v1.5.0
 	github.com/google/uuid v1.2.0
-	github.com/gorilla/mux v1.7.4 // indirect
 	github.com/joho/godotenv v1.3.0
 	github.com/lib/pq v1.3.0
-	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/slysterous/custom-number v0.0.0-20201103185958-85f1b5ec8d17
 	github.com/spf13/cobra v1.0.0
-	github.com/spf13/viper v1.8.1 // indirect
+	google.golang.org/genproto v0.0.0-20210602131652-f16073e35f0c // indirect
 )

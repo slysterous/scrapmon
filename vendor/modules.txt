@@ -1,0 +1,42 @@
+# github.com/DATA-DOG/go-sqlmock v1.4.1
+## explicit
+github.com/DATA-DOG/go-sqlmock
+# github.com/containerd/containerd v1.5.5
+## explicit
+# github.com/docker/docker v1.4.2-0.20200213202729-31a86c4ab209
+## explicit
+# github.com/docker/go-connections v0.4.0
+## explicit
+# github.com/golang-migrate/migrate v3.5.4+incompatible
+## explicit
+github.com/golang-migrate/migrate
+github.com/golang-migrate/migrate/database
+github.com/golang-migrate/migrate/database/postgres
+github.com/golang-migrate/migrate/source
+github.com/golang-migrate/migrate/source/file
+# github.com/golang/mock v1.5.0
+## explicit
+github.com/golang/mock/gomock
+# github.com/google/uuid v1.2.0
+## explicit
+github.com/google/uuid
+# github.com/inconshreveable/mousetrap v1.0.0
+github.com/inconshreveable/mousetrap
+# github.com/joho/godotenv v1.3.0
+## explicit
+github.com/joho/godotenv
+# github.com/lib/pq v1.3.0
+## explicit
+github.com/lib/pq
+github.com/lib/pq/oid
+github.com/lib/pq/scram
+# github.com/slysterous/custom-number v0.0.0-20201103185958-85f1b5ec8d17
+## explicit
+github.com/slysterous/custom-number
+# github.com/spf13/cobra v1.0.0
+## explicit
+github.com/spf13/cobra
+# github.com/spf13/pflag v1.0.5
+github.com/spf13/pflag
+# google.golang.org/genproto v0.0.0-20210602131652-f16073e35f0c
+## explicit
