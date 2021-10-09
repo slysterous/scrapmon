@@ -28,7 +28,6 @@ func main() {
 	// fetch the config from env variables.
 	conf := config.FromEnv()
 
-
 	// init database manager
 	pgClient, err := postgres.NewClient(getDataSource(conf), conf.MaxDBConnections)
 	if err != nil {
@@ -54,11 +53,10 @@ func main() {
 		Timeout:       0,
 	})
 
-	lg:=logger.NewLogger(1, os.Stdout)
-
+	lg := logger.NewLogger(1, os.Stdout)
 
 	commandManager := scrapmon.ConcurrentCommandManager{
-		Logger: lg,
+		Logger:  lg,
 		Storage: storage,
 		CodeAuthority: scrapmon.ConcurrentCodeAuthority{
 			Logger:   lg,

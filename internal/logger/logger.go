@@ -5,7 +5,6 @@ import (
 	"io"
 )
 
-
 // Possible Scrap Status  values.
 const (
 	TraceLevel uint32 = iota
@@ -66,8 +65,8 @@ func (l Logger) Infof(format string, args ...interface{}) {
 
 // Info logs a message.
 func (l Logger) Info(str string) {
-	if l.GetLevel() <=  InfoLevel {
-		printWithColor(l.writer,ColorGreen,str)
+	if l.GetLevel() <= InfoLevel {
+		printWithColor(l.writer, ColorGreen, str)
 	}
 }
 
@@ -89,6 +88,6 @@ func printfWithColor(w io.Writer, color color, format string, args ...interface{
 	fmt.Fprintf(w, string(color)+format+string(ColorReset), args...)
 }
 
-func printWithColor(w io.Writer, color color,str string){
-	fmt.Fprint(w,string(color)+str+string(ColorReset))
+func printWithColor(w io.Writer, color color, str string) {
+	fmt.Fprint(w, string(color)+str+string(ColorReset))
 }

@@ -13,17 +13,19 @@ import (
 
 //go:generate mockgen -destination mock/http.go -package http_mock . Reader,Downloader
 
+// Downloader downloads files via http
 type Downloader interface {
 	Get(url string) (resp *http.Response, err error)
 }
 
+// Reader is well, a reader
 type Reader interface {
 	ReadAll(r io.Reader) ([]byte, error)
 }
 
 // Client represents an http client.
 type Client struct {
-	baseUrl    string
+	baseURL    string
 	reader     Reader
 	downloader Downloader
 }
@@ -31,7 +33,7 @@ type Client struct {
 // NewClient returns a new http client.
 func NewClient(baseUrl string, reader Reader, downloader Downloader) *Client {
 	return &Client{
-		baseUrl:    baseUrl,
+		baseURL:    baseUrl,
 		reader:     reader,
 		downloader: downloader,
 	}
@@ -39,7 +41,7 @@ func NewClient(baseUrl string, reader Reader, downloader Downloader) *Client {
 
 // ScrapeByCode scrapes a file.
 func (c Client) ScrapeByCode(code, ext string) (scrapmon.ScrapedFile, error) {
-	url := c.baseUrl + code + "." + ext
+	url := c.baseURL + code + "." + ext
 
 	//Get the response bytes from the url
 	response, err := c.downloader.Get(url)

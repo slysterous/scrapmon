@@ -46,7 +46,7 @@ type Storage struct {
 
 // ConcurrentCommandManager handles commands.
 type ConcurrentCommandManager struct {
-	Logger		  Logger
+	Logger        Logger
 	Storage       Storage
 	CodeAuthority ConcurrentCodeProducer
 	FileScrapper  ConcurrentDownloader

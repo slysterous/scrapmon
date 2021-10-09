@@ -17,10 +17,12 @@ type Manager struct {
 	Purger      Purger
 }
 
+// Writer is the file writer
 type Writer interface {
 	WriteFile(filename string, data []byte, perm os.FileMode) error
 }
 
+// Purger is removing files
 type Purger interface {
 	ReadDir(dirname string) ([]os.FileInfo, error)
 	RemoveAll(path string) error
