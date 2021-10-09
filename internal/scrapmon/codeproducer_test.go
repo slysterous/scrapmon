@@ -30,7 +30,7 @@ func TestProduceCodes(t *testing.T) {
 		defer cancel()
 		number := customNumber.NewNumber(CustomNumberDigitValues, "aa")
 
-		mockLogger.EXPECT().Infof("Initializing Code Production...!").Times(1)
+		mockLogger.EXPECT().Infof("Initializing Code Production...! \n").Times(1)
 		mockLogger.EXPECT().Debugf("Iterations Counter: %d, Desired Iterations: %d\n", 1, 5).Times(1)
 		mockLogger.EXPECT().Debugf("Iterations Counter: %d, Desired Iterations: %d\n", 2, 5).Times(1)
 		mockLogger.EXPECT().Debugf("Iterations Counter: %d, Desired Iterations: %d\n", 3, 5).Times(1)
