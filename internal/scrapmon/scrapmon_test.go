@@ -90,7 +90,7 @@ func TestConcurrentCommandManagerPurgeCommand(t *testing.T) {
 			Fm: mockFm,
 			Dm: mockDm,
 		}
-		mockLogger := scrapmonmock.NewMockLogger(mockCtrl)
+		mockLogger := scrapmonmock.NewLogger()
 		mockScrapper := scrapmonmock.NewMockScrapper(mockCtrl)
 		commandManager := scrapmon.ConcurrentCommandManager{
 			Storage: mockStorage,
@@ -119,7 +119,7 @@ func TestConcurrentCommandManagerPurgeCommand(t *testing.T) {
 			Fm: mockFm,
 			Dm: mockDm,
 		}
-		mockLogger := scrapmonmock.NewMockLogger(mockCtrl)
+		mockLogger := scrapmonmock.NewLogger()
 		mockScrapper := scrapmonmock.NewMockScrapper(mockCtrl)
 		commandManager := scrapmon.ConcurrentCommandManager{
 			Storage: mockStorage,

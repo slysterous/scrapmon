@@ -26,6 +26,8 @@ const (
 	ColorWhite  color = "\033[37m"
 )
 
+
+
 // Logger is a simple std out logger
 type Logger struct {
 	level  uint32

@@ -18,7 +18,7 @@ func TestTracef(t *testing.T) {
 		got := buf.String()
 		want := fmt.Sprintf(string(logger.ColorCyan)+"omg this is a test with param: %s"+string(logger.ColorReset), "parameter")
 
-		if strings.Contains(want, got) {
+		if strings.Compare(want, got) != 0 {
 			t.Errorf("expected: %s, got: %s", want, got)
 		}
 	})
@@ -45,7 +45,7 @@ func TestDebugf(t *testing.T) {
 		got := buf.String()
 		want := fmt.Sprintf(string(logger.ColorBlue)+"omg this is a test with param: %s"+string(logger.ColorReset), "parameter")
 
-		if strings.Contains(want, got) {
+		if strings.Compare(want, got) != 0 {
 			t.Errorf("expected: %s, got: %s", want, got)
 		}
 	})
@@ -72,7 +72,7 @@ func TestInfof(t *testing.T) {
 		got := buf.String()
 		want := fmt.Sprintf(string(logger.ColorGreen)+"omg this is a test with param: %s"+string(logger.ColorReset), "parameter")
 
-		if strings.Contains(want, got) {
+		if strings.Compare(want, got) != 0 {
 			t.Errorf("expected: %s, got: %s", want, got)
 		}
 	})
@@ -80,7 +80,34 @@ func TestInfof(t *testing.T) {
 		var buf bytes.Buffer
 
 		lg := logger.NewLogger(logger.WarnLevel, &buf)
-		lg.Debugf("omg this is a test with param: %s", "parameter")
+		lg.Infof("omg this is a test with param: %s", "parameter")
+
+		got := buf.String()
+		if got != "" {
+			t.Errorf("expected empty string, got: %s", got)
+		}
+	})
+}
+
+func TestInfo(t *testing.T) {
+	t.Run("Success", func(t *testing.T) {
+		var buf bytes.Buffer
+
+		lg := logger.NewLogger(logger.InfoLevel, &buf)
+		lg.Info("omg this is a test")
+
+		got := buf.String()
+		want := string(logger.ColorGreen)+"omg this is a test"+string(logger.ColorReset)
+
+		if strings.Compare(want, got) != 0 {
+			t.Errorf("expected: %s, got: %s", want, got)
+		}
+	})
+	t.Run("Don't print due to log level", func(t *testing.T) {
+		var buf bytes.Buffer
+
+		lg := logger.NewLogger(logger.ErrorLevel, &buf)
+		lg.Info("omg this is a test")
 
 		got := buf.String()
 		if got != "" {
@@ -97,9 +124,9 @@ func TestWarnf(t *testing.T) {
 		lg.Warnf("omg this is a test with param: %s", "parameter")
 
 		got := buf.String()
-		want := fmt.Sprintf(string(logger.ColorGreen)+"omg this is a test with param: %s"+string(logger.ColorReset), "parameter")
+		want := fmt.Sprintf(string(logger.ColorYellow)+"omg this is a test with param: %s"+string(logger.ColorReset), "parameter")
 
-		if strings.Contains(want, got) {
+		if strings.Compare(want, got) != 0 {
 			t.Errorf("expected: %s, got: %s", want, got)
 		}
 	})
@@ -107,7 +134,7 @@ func TestWarnf(t *testing.T) {
 		var buf bytes.Buffer
 
 		lg := logger.NewLogger(logger.ErrorLevel, &buf)
-		lg.Debugf("omg this is a test with param: %s", "parameter")
+		lg.Warnf("omg this is a test with param: %s", "parameter")
 
 		got := buf.String()
 		if got != "" {
@@ -124,9 +151,9 @@ func TestErrorf(t *testing.T) {
 		lg.Errorf("omg this is a test with param: %s", "parameter")
 
 		got := buf.String()
-		want := fmt.Sprintf(string(logger.ColorGreen)+"omg this is a test with param: %s"+string(logger.ColorReset), "parameter")
+		want := fmt.Sprintf(string(logger.ColorRed)+"omg this is a test with param: %s"+string(logger.ColorReset), "parameter")
 
-		if strings.Contains(want, got) {
+		if strings.Compare(want, got) != 0 {
 			t.Errorf("expected: %s, got: %s", want, got)
 		}
 	})
@@ -134,7 +161,7 @@ func TestErrorf(t *testing.T) {
 		var buf bytes.Buffer
 
 		lg := logger.NewLogger(5, &buf)
-		lg.Debugf("omg this is a test with param: %s", "parameter")
+		lg.Errorf("omg this is a test with param: %s", "parameter")
 
 		got := buf.String()
 		if got != "" {

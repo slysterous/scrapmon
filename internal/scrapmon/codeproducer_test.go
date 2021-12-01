@@ -22,27 +22,13 @@ func TestProduceCodes(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 		counter := 0
-		mockLogger := scrapmonmock.NewMockLogger(mockCtrl)
+		mockLogger := scrapmonmock.NewLogger()
 		cca := scrapmon.ConcurrentCodeAuthority{
 			Logger: mockLogger,
 		}
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 		number := customNumber.NewNumber(CustomNumberDigitValues, "aa")
-
-		mockLogger.EXPECT().Infof("Initializing Code Production...! \n").Times(1)
-		mockLogger.EXPECT().Debugf("Iterations Counter: %d, Desired Iterations: %d\n", 1, 5).Times(1)
-		mockLogger.EXPECT().Debugf("Iterations Counter: %d, Desired Iterations: %d\n", 2, 5).Times(1)
-		mockLogger.EXPECT().Debugf("Iterations Counter: %d, Desired Iterations: %d\n", 3, 5).Times(1)
-		mockLogger.EXPECT().Debugf("Iterations Counter: %d, Desired Iterations: %d\n", 4, 5).Times(1)
-		mockLogger.EXPECT().Debugf("Iterations Counter: %d, Desired Iterations: %d\n", 5, 5).Times(1)
-
-		mockLogger.EXPECT().Debugf("Producing Code: %s\n", "aa").Times(1)
-		mockLogger.EXPECT().Debugf("Producing Code: %s\n", "ab").Times(1)
-		mockLogger.EXPECT().Debugf("Producing Code: %s\n", "ac").Times(1)
-		mockLogger.EXPECT().Debugf("Producing Code: %s\n", "ad").Times(1)
-		mockLogger.EXPECT().Debugf("Producing Code: %s\n", "ae").Times(1)
-		mockLogger.EXPECT().Debugf("Finished producing Codes!\n").Times(1)
 
 		codes, _ := cca.Produce(ctx, number, 5, 5)
 		var producedCodes []string
@@ -63,28 +49,13 @@ func TestProduceCodes(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 		counter := 0
-		mockLogger := scrapmonmock.NewMockLogger(mockCtrl)
+		mockLogger := scrapmonmock.NewLogger()
 		cca := scrapmon.ConcurrentCodeAuthority{
 			Logger: mockLogger,
 		}
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 		number := customNumber.NewNumber(CustomNumberDigitValues, "aa")
-
-		mockLogger.EXPECT().Infof("Initializing Code Production...!").Times(1)
-		mockLogger.EXPECT().Debugf("Iterations Counter: %d, Desired Iterations: %d\n", 1, 5).Times(1)
-		mockLogger.EXPECT().Debugf("Iterations Counter: %d, Desired Iterations: %d\n", 2, 5).Times(1)
-		mockLogger.EXPECT().Debugf("Iterations Counter: %d, Desired Iterations: %d\n", 3, 5).Times(1)
-		mockLogger.EXPECT().Debugf("Iterations Counter: %d, Desired Iterations: %d\n", 4, 5).Times(1)
-		mockLogger.EXPECT().Debugf("Iterations Counter: %d, Desired Iterations: %d\n", 5, 5).Times(2)
-
-		mockLogger.EXPECT().Debugf("Producing Code: %s\n", "aa").Times(1)
-		mockLogger.EXPECT().Debugf("Producing Code: %s\n", "ab").Times(1)
-		mockLogger.EXPECT().Debugf("Producing Code: %s\n", "ac").Times(1)
-		mockLogger.EXPECT().Debugf("Producing Code: %s\n", "ad").Times(1)
-		mockLogger.EXPECT().Debugf("Producing Code: %s\n", "ae").Times(1)
-		mockLogger.EXPECT().Debugf("Producing Code: %s\n", "af").Times(1)
-		mockLogger.EXPECT().Debugf("Finished producing Codes!\n").Times(1)
 
 		codes, produceMoreCodes := cca.Produce(ctx, number, 5, 5)
 		var producedCodes []string
@@ -112,7 +83,7 @@ func TestFilterCodes(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 		counter := 0
-		mockLogger := scrapmonmock.NewMockLogger(mockCtrl)
+		mockLogger := scrapmonmock.NewLogger()
 		cca := scrapmon.ConcurrentCodeAuthority{
 			Logger: mockLogger,
 		}
@@ -134,7 +105,6 @@ func TestFilterCodes(t *testing.T) {
 		//feed codes
 		for _, code := range wantCodes {
 			mockDM.EXPECT().CodeAlreadyExists(code).Return(false, nil).Times(1)
-			mockLogger.EXPECT().Debugf("File with code %s does not exist, will be downloaded\n", code).Times(1)
 			unfilteredCodes <- code
 		}
 
@@ -162,7 +132,7 @@ func TestFilterCodes(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 		counter := 0
-		mockLogger := scrapmonmock.NewMockLogger(mockCtrl)
+		mockLogger := scrapmonmock.NewLogger()
 		cca := scrapmon.ConcurrentCodeAuthority{
 			Logger: mockLogger,
 		}
@@ -182,19 +152,19 @@ func TestFilterCodes(t *testing.T) {
 		wantCodes := []string{"aa", "ab", "ac", "ad"}
 
 		mockDM.EXPECT().CodeAlreadyExists("aa").Return(false, nil).Times(1)
-		mockLogger.EXPECT().Debugf("File with code %s does not exist, will be downloaded\n", "aa").Times(1)
+
 		unfilteredCodes <- "aa"
 		mockDM.EXPECT().CodeAlreadyExists("ab").Return(false, nil).Times(1)
-		mockLogger.EXPECT().Debugf("File with code %s does not exist, will be downloaded\n", "ab").Times(1)
+
 		unfilteredCodes <- "ab"
 		mockDM.EXPECT().CodeAlreadyExists("ac").Return(true, nil).Times(1)
-		mockLogger.EXPECT().Debugf("File with code %s already exists, asking for another code\n", "ac").Times(1)
+
 		unfilteredCodes <- "ac"
 		mockDM.EXPECT().CodeAlreadyExists("ad").Return(false, nil).Times(1)
-		mockLogger.EXPECT().Debugf("File with code %s does not exist, will be downloaded\n", "ad").Times(1)
+
 		unfilteredCodes <- "ad"
 		mockDM.EXPECT().CodeAlreadyExists("ae").Return(false, nil).Times(1)
-		mockLogger.EXPECT().Debugf("File with code %s does not exist, will be downloaded\n", "ae").Times(1)
+
 		unfilteredCodes <- "ae"
 
 		filteredCodes, _ := cca.Filter(ctx, mockStorage, unfilteredCodes, produceMoreCodes, 10)
@@ -218,7 +188,7 @@ func TestFilterCodes(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 		counter := 0
-		mockLogger := scrapmonmock.NewMockLogger(mockCtrl)
+		mockLogger := scrapmonmock.NewLogger()
 		cca := scrapmon.ConcurrentCodeAuthority{
 			Logger: mockLogger,
 		}
@@ -238,16 +208,16 @@ func TestFilterCodes(t *testing.T) {
 		wantCodes := []string{"aa", "ab", "ac", "ad"}
 
 		mockDM.EXPECT().CodeAlreadyExists("aa").Return(false, nil).Times(1)
-		mockLogger.EXPECT().Debugf("File with code %s does not exist, will be downloaded\n", "aa").Times(1)
+
 		unfilteredCodes <- "aa"
 		mockDM.EXPECT().CodeAlreadyExists("ab").Return(false, nil).Times(1)
-		mockLogger.EXPECT().Debugf("File with code %s does not exist, will be downloaded\n", "ab").Times(1)
+
 		unfilteredCodes <- "ab"
 		mockDM.EXPECT().CodeAlreadyExists("ac").Return(false, nil).Times(1)
-		mockLogger.EXPECT().Debugf("File with code %s does not exist, will be downloaded\n", "ac").Times(1)
+
 		unfilteredCodes <- "ac"
 		mockDM.EXPECT().CodeAlreadyExists("ad").Return(false, nil).Times(1)
-		mockLogger.EXPECT().Debugf("File with code %s does not exist, will be downloaded\n", "ad").Times(1)
+
 		unfilteredCodes <- "ad"
 		mockDM.EXPECT().CodeAlreadyExists("ae").Return(false, errors.New("test error")).Times(1)
 		unfilteredCodes <- "ae"
@@ -283,7 +253,7 @@ func TestFilterCodes(t *testing.T) {
 		//t.Parallel()
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
-		mockLogger := scrapmonmock.NewMockLogger(mockCtrl)
+		mockLogger := scrapmonmock.NewLogger()
 		cca := scrapmon.ConcurrentCodeAuthority{
 			Logger: mockLogger,
 		}
@@ -309,15 +279,13 @@ func TestFilterCodes(t *testing.T) {
 			defer close(unfilteredCodes)
 			for _, code := range wantCodes {
 				mockDM.EXPECT().CodeAlreadyExists(code).Return(false, nil).Times(1)
-				mockLogger.EXPECT().Debugf("File with code %s does not exist, will be downloaded\n", code).Times(1)
 
 				unfilteredCodes <- code
 				time.Sleep(time.Millisecond * 500)
 			}
 		}(wantCodes)
 
-		mockLogger.EXPECT().Debugf("Finished Filtering Codes!\n").Times(1)
-
+		
 		filteredCodes, _ := cca.Filter(ctx, mockStorage, unfilteredCodes, produceMoreCodes, 1)
 
 		var producedCodes []string

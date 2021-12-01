@@ -74,7 +74,7 @@ func TestDownloadFiles(t *testing.T) {
 		}
 
 		counter := 0
-		mockLogger := scrapmonmock.NewMockLogger(mockCtrl)
+		mockLogger := scrapmonmock.NewLogger()
 		mockScrapper := scrapmonmock.NewMockScrapper(mockCtrl)
 		cd := scrapmon.ConcurrentScrapper{
 			Logger:   mockLogger,
@@ -131,7 +131,7 @@ func TestDownloadFiles(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		counter := 0
-		mockLogger := scrapmonmock.NewMockLogger(mockCtrl)
+		mockLogger := scrapmonmock.NewLogger()
 		mockScrapper := scrapmonmock.NewMockScrapper(mockCtrl)
 		cd := scrapmon.ConcurrentScrapper{
 			Logger:   mockLogger,
@@ -166,7 +166,6 @@ func TestDownloadFiles(t *testing.T) {
 			Type: "png",
 		}, nil).Times(1)
 		mockDM.EXPECT().UpdateScrapStatusByCode("a", scrapmon.StatusNotFound).Return(nil).Times(1)
-		mockLogger.EXPECT().Infof("File %s was not found, requesting a new one!\n", "a")
 
 		pendingFiles <- scrap
 
@@ -188,7 +187,7 @@ func TestDownloadFiles(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		counter := 0
-		mockLogger := scrapmonmock.NewMockLogger(mockCtrl)
+		mockLogger := scrapmonmock.NewLogger()
 		mockScrapper := scrapmonmock.NewMockScrapper(mockCtrl)
 		cd := scrapmon.ConcurrentScrapper{
 			Logger:   mockLogger,
@@ -223,7 +222,6 @@ func TestDownloadFiles(t *testing.T) {
 			Type: "png",
 		}, nil).Times(1)
 		mockDM.EXPECT().UpdateScrapStatusByCode("a", scrapmon.StatusNotFound).Return(nil).Times(1)
-		mockLogger.EXPECT().Infof("File %s was not found, requesting a new one!\n", "a")
 
 		pendingFiles <- scrap
 
@@ -245,7 +243,7 @@ func TestDownloadFiles(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		counter := 0
-		mockLogger := scrapmonmock.NewMockLogger(mockCtrl)
+		mockLogger := scrapmonmock.NewLogger()
 		mockScrapper := scrapmonmock.NewMockScrapper(mockCtrl)
 		cd := scrapmon.ConcurrentScrapper{
 			Logger:   mockLogger,
@@ -280,7 +278,6 @@ func TestDownloadFiles(t *testing.T) {
 			Type: "png",
 		}, nil).Times(1)
 		mockDM.EXPECT().UpdateScrapStatusByCode("a", scrapmon.StatusNotFound).Return(errors.New("test error")).Times(1)
-		mockLogger.EXPECT().Infof("File %s was not found, requesting a new one!\n", "a")
 
 		pendingFiles <- scrap
 
@@ -306,7 +303,7 @@ func TestDownloadFiles(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		counter := 0
-		mockLogger := scrapmonmock.NewMockLogger(mockCtrl)
+		mockLogger := scrapmonmock.NewLogger()
 		mockScrapper := scrapmonmock.NewMockScrapper(mockCtrl)
 		cd := scrapmon.ConcurrentScrapper{
 			Logger:   mockLogger,
@@ -357,7 +354,7 @@ func TestDownloadFiles(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		counter := 0
-		mockLogger := scrapmonmock.NewMockLogger(mockCtrl)
+		mockLogger := scrapmonmock.NewLogger()
 		mockScrapper := scrapmonmock.NewMockScrapper(mockCtrl)
 		cd := scrapmon.ConcurrentScrapper{
 			Logger:   mockLogger,
@@ -434,7 +431,7 @@ func TestSaveFiles(t *testing.T) {
 			},
 		}
 		counter := 0
-		mockLogger := scrapmonmock.NewMockLogger(mockCtrl)
+		mockLogger := scrapmonmock.NewLogger()
 		mockScrapper := scrapmonmock.NewMockScrapper(mockCtrl)
 		cd := scrapmon.ConcurrentScrapper{
 			Logger:   mockLogger,
@@ -492,7 +489,7 @@ func TestSaveFiles(t *testing.T) {
 			Type: "png",
 		}
 
-		mockLogger := scrapmonmock.NewMockLogger(mockCtrl)
+		mockLogger := scrapmonmock.NewLogger()
 		mockScrapper := scrapmonmock.NewMockScrapper(mockCtrl)
 		cd := scrapmon.ConcurrentScrapper{
 			Logger:   mockLogger,
@@ -535,7 +532,7 @@ func TestSaveFiles(t *testing.T) {
 			Type: "png",
 		}
 
-		mockLogger := scrapmonmock.NewMockLogger(mockCtrl)
+		mockLogger := scrapmonmock.NewLogger()
 		mockScrapper := scrapmonmock.NewMockScrapper(mockCtrl)
 		cd := scrapmon.ConcurrentScrapper{
 			Logger:   mockLogger,

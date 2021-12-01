@@ -31,7 +31,7 @@ run:
 	docker-compose up -d --build
 
 gen:
-	go generate ./...
+	go generate ./... --build_flags=--mod=mod
 
 run-fast:
 	docker-compose down
